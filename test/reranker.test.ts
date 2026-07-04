@@ -85,6 +85,7 @@ describe("Reranker", () => {
     });
 
     await expect(reranker.rank("query", [])).resolves.toEqual([]);
+    await expect(reranker.rank("query", [], { k: -1 })).resolves.toEqual([]);
     expect(strategy.callCount()).toBe(0);
   });
 

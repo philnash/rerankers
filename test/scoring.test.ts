@@ -34,4 +34,14 @@ describe("extractScore", () => {
 
     expect(extractScores({ logits: tensorLike }, 2)).toEqual([0.3, 0.7]);
   });
+
+  it("extracts scores directly from raw multi-row tensor-like output", () => {
+    const tensorLike = {
+      sigmoid: () => ({
+        tolist: () => [[0.3], [0.7]],
+      }),
+    };
+
+    expect(extractScores(tensorLike, 2)).toEqual([0.3, 0.7]);
+  });
 });

@@ -30,10 +30,12 @@ export type SequenceClassifierLoader = (
 }>;
 
 export class CrossEncoderStrategy implements ScoringStrategy {
-  private classifier: Promise<{
-    model: SequenceClassifier;
-    tokenizer: Tokenizer;
-  }> | undefined;
+  private classifier:
+    | Promise<{
+        model: SequenceClassifier;
+        tokenizer: Tokenizer;
+      }>
+    | undefined;
 
   constructor(
     private readonly config: RerankerConfig,

@@ -31,12 +31,11 @@ export class Reranker {
     options?: RankOptions,
   ): Promise<Array<RerankResult<TDocument>>> {
     const normalized = normalizeDocuments(documents);
-    const k = normalizeK(options, normalized.length);
-
     if (normalized.length === 0) {
       return [];
     }
 
+    const k = normalizeK(options, normalized.length);
     const results = await this.strategy.score(query, normalized);
     return [...results].sort((left, right) => right.score - left.score).slice(0, k);
   }

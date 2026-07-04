@@ -47,13 +47,22 @@ export function extractScores(output: unknown, expectedCount: number): number[] 
     }
   }
 
+  if (isTensorLike(output)) {
+    const tensorScores = extractScoresFromTensor(output);
+    if (tensorScores.length >= expectedCount) {
+      return tensorScores.slice(0, expectedCount);
+    }
+  }
+
   if (expectedCount === 1) {
     return [extractScore(output)];
   }
 
-  throw new TypeError(
-    `Could not extract ${expectedCount} reranking scores from model output.`,
-  );
+  throw new TypeError(`Could not extract ${expectedCount} reranking scores from model output.`);
+}
+
+function getTensorValues(output: TensorLike): unknown {
+  return output.sigmoid?.().tolist?.() ?? output.tolist?.();
 }
 
 function extractScoreFromTensor(output: unknown): number {
@@ -61,8 +70,8 @@ function extractScoreFromTensor(output: unknown): number {
     throw new TypeError("Could not extract a numeric reranking score from model output.");
   }
 
-  const values = output.sigmoid?.().tolist?.() ?? output.tolist?.();
-  const score = firstNumber(values);
+  const values = getTensorValues(output);
+  const score = findFirstNestedNumber(values);
   if (score === undefined) {
     throw new TypeError("Could not extract a numeric reranking score from tensor output.");
   }
@@ -75,26 +84,26 @@ function extractScoresFromTensor(output: unknown): number[] {
     return [];
   }
 
-  const values = output.sigmoid?.().tolist?.() ?? output.tolist?.();
+  const values = getTensorValues(output);
 
   if (!Array.isArray(values)) {
-    const score = firstNumber(values);
+    const score = findFirstNestedNumber(values);
     return score === undefined ? [] : [score];
   }
 
   return values
-    .map((row) => firstNumber(row))
+    .map((row) => findFirstNestedNumber(row))
     .filter((score): score is number => score !== undefined);
 }
 
-function firstNumber(value: unknown): number | undefined {
+function findFirstNestedNumber(value: unknown): number | undefined {
   if (typeof value === "number") {
     return value;
   }
 
   if (Array.isArray(value)) {
     for (const item of value) {
-      const score = firstNumber(item);
+      const score = findFirstNestedNumber(item);
       if (score !== undefined) {
         return score;
       }
