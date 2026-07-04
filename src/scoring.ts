@@ -1,9 +1,6 @@
-type TensorLike = {
-  sigmoid?: () => {
-    tolist?: () => unknown;
-  };
-  tolist?: () => unknown;
-};
+import type { Tensor } from "@huggingface/transformers";
+
+type TensorLike = Partial<Pick<Tensor, "sigmoid" | "tolist">>;
 
 export function extractScore(output: unknown): number {
   if (typeof output === "number") {

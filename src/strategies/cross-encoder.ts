@@ -1,4 +1,5 @@
 import { AutoModelForSequenceClassification, AutoTokenizer } from "@huggingface/transformers";
+import type { PreTrainedTokenizer } from "@huggingface/transformers";
 
 import { RerankerModelLoadError } from "../errors.js";
 import { extractScores } from "../scoring.js";
@@ -11,31 +12,25 @@ import type {
 } from "../types.js";
 
 type Tokenizer = (
-  text: string | string[],
-  options?: {
-    padding?: boolean;
-    text_pair?: string | string[];
-    truncation?: boolean;
-  },
-) => unknown;
+  ...args: Parameters<PreTrainedTokenizer["_call"]>
+) => ReturnType<PreTrainedTokenizer["_call"]>;
 
-type SequenceClassifier = (inputs: unknown) => Promise<unknown>;
+type TokenizerOutput = ReturnType<Tokenizer>;
+
+type SequenceClassifier = (inputs: TokenizerOutput) => Promise<unknown>;
+
+type SequenceClassifierPair = {
+  model: SequenceClassifier;
+  tokenizer: Tokenizer;
+};
 
 export type SequenceClassifierLoader = (
   model: string,
-  options?: Record<string, unknown>,
-) => Promise<{
-  model: SequenceClassifier;
-  tokenizer: Tokenizer;
-}>;
+  options?: RerankerConfig["transformerOptions"],
+) => Promise<SequenceClassifierPair>;
 
 export class CrossEncoderStrategy implements ScoringStrategy {
-  private classifier:
-    | Promise<{
-        model: SequenceClassifier;
-        tokenizer: Tokenizer;
-      }>
-    | undefined;
+  private classifier: Promise<SequenceClassifierPair> | undefined;
 
   constructor(
     private readonly config: RerankerConfig,
@@ -61,10 +56,7 @@ export class CrossEncoderStrategy implements ScoringStrategy {
     }));
   }
 
-  private getClassifier(): Promise<{
-    model: SequenceClassifier;
-    tokenizer: Tokenizer;
-  }> {
+  private getClassifier(): Promise<SequenceClassifierPair> {
     this.classifier ??= this.load().catch((error: unknown) => {
       this.classifier = undefined;
       throw error;
@@ -73,10 +65,7 @@ export class CrossEncoderStrategy implements ScoringStrategy {
     return this.classifier;
   }
 
-  private async load(): Promise<{
-    model: SequenceClassifier;
-    tokenizer: Tokenizer;
-  }> {
+  private async load(): Promise<SequenceClassifierPair> {
     try {
       return await this.loadClassifier(this.config.model, this.config.transformerOptions);
     } catch (error) {
@@ -96,7 +85,7 @@ const defaultSequenceClassifierLoader: SequenceClassifierLoader = async (modelId
   ]);
 
   return {
-    model: model as SequenceClassifier,
-    tokenizer: tokenizer as Tokenizer,
+    model: (inputs) => Promise.resolve(model(inputs)),
+    tokenizer: (...args) => tokenizer._call(...args),
   };
 };

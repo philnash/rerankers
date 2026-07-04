@@ -1,3 +1,5 @@
+import type { PretrainedModelOptions } from "@huggingface/transformers";
+
 export type RerankerPreset =
   "bge" | "minilm" | "mixedbread-xsmall" | "mixedbread-base" | "mixedbread-large" | "colbert-small";
 
@@ -23,7 +25,7 @@ export type RerankResult<TDocument = RerankDocument> = {
   score: number;
 };
 
-export type TransformerOptions = Record<string, unknown>;
+export type TransformerOptions = PretrainedModelOptions;
 
 export type RerankerConfig = {
   model: string;

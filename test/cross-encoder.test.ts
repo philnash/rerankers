@@ -8,7 +8,11 @@ import type { RerankerConfig } from "../src/index.js";
 
 describe("CrossEncoderStrategy", () => {
   it("loads the configured sequence classifier once and scores query-document pairs", async () => {
-    const tokenizer = vi.fn(() => ({ input_ids: "tokenized" }));
+    const tokenizedInputs = {
+      attention_mask: [[1], [1]],
+      input_ids: [[101], [101]],
+    };
+    const tokenizer = vi.fn(() => tokenizedInputs);
     const model = vi.fn(() =>
       Promise.resolve({
         logits: {
@@ -39,7 +43,7 @@ describe("CrossEncoderStrategy", () => {
       text_pair: ["first", "second"],
       truncation: true,
     });
-    expect(model).toHaveBeenCalledWith({ input_ids: "tokenized" });
+    expect(model).toHaveBeenCalledWith(tokenizedInputs);
     expect(results).toEqual([
       { document: "first", index: 0, score: 0.2 },
       { document: "second", index: 1, score: 0.9 },
