@@ -22,7 +22,8 @@
     "format": "prettier --write .",
     "lint": "eslint .",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck && npm run format"
   },
   "keywords": [
     "reranking",
