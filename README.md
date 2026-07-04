@@ -6,7 +6,7 @@ Browser-compatible TypeScript reranking over open Hugging Face models through Tr
 import { Reranker } from "rerankers";
 
 const reranker = await Reranker.create("mixedbread-base");
-const results = await reranker.rank("Who wrote To Kill a Mockingbird?", documents, { k: 5 });
+const results = await reranker.rank("Who wrote To Kill a Mockingbird?", documents, { topK: 5 });
 ```
 
 ## Install
@@ -61,6 +61,57 @@ type RerankResult<TDocument> = {
   index: number;
   score: number;
 };
+```
+
+## LangChain
+
+Install LangChain core alongside this package:
+
+```sh
+npm install rerankers @langchain/core
+```
+
+Use the `LocalReranker` adapter from the `rerankers/langchain` subpath anywhere LangChain expects a document compressor.
+
+```ts
+import { LocalReranker } from "rerankers/langchain";
+
+const reranker = new LocalReranker({
+  model: "mixedbread-base",
+  topK: 5,
+});
+
+const documents = await reranker.compressDocuments(retrievedDocuments, "red planet");
+```
+
+Returned LangChain documents are the original document objects in reranked order. Each returned document receives `metadata.relevanceScore`.
+
+Pass core creation options through `createOptions`:
+
+```ts
+const reranker = new LocalReranker({
+  model: "mixedbread-base",
+  createOptions: {
+    strategyFactory,
+  },
+  topK: 5,
+});
+```
+
+For advanced lifecycle control, pass an already-created reranker:
+
+```ts
+import { Reranker } from "rerankers";
+
+const coreReranker = await Reranker.create("mixedbread-base");
+const reranker = new LocalReranker({ reranker: coreReranker, topK: 5 });
+```
+
+Use `rerank()` when you want raw scores without mutating LangChain document metadata:
+
+```ts
+const results = await reranker.rerank(documents, "red planet", { topK: 5 });
+// [{ index: 1, relevanceScore: 0.92 }, ...]
 ```
 
 ## Browser And Node

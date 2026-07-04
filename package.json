@@ -11,6 +11,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./langchain": {
+      "types": "./dist/langchain.d.ts",
+      "import": "./dist/langchain.js"
     }
   },
   "files": [
@@ -36,8 +40,17 @@
   "dependencies": {
     "@huggingface/transformers": "^3.8.1"
   },
+  "peerDependencies": {
+    "@langchain/core": "^1.2.1"
+  },
+  "peerDependenciesMeta": {
+    "@langchain/core": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@eslint/js": "^9.30.0",
+    "@langchain/core": "^1.2.1",
     "@types/node": "^24.0.8",
     "eslint": "^9.30.0",
     "prettier": "^3.6.2",

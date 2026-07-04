@@ -36,7 +36,7 @@ export type RerankerConfig = {
 };
 
 export type RankOptions = {
-  k?: number;
+  topK?: number;
 };
 
 export type ScoringStrategy = {

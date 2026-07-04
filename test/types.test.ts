@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { SequenceClassifierLoader } from "../src/strategies/cross-encoder.js";
-import type { RerankerConfig } from "../src/index.js";
+import type { RankOptions, RerankerConfig } from "../src/index.js";
 
 const validTransformersOptionsConfig: RerankerConfig = {
   model: "mixedbread-ai/mxbai-rerank-base-v1",
@@ -31,6 +31,13 @@ const invalidSequenceClassifierPair: Awaited<ReturnType<SequenceClassifierLoader
   }),
 };
 
+const validRankOptions: RankOptions = {
+  topK: 3,
+};
+
+// @ts-expect-error rank options should use topK, not k.
+void ({ k: 1 } satisfies RankOptions);
+
 describe("public Transformers.js option types", () => {
   it("accepts valid Transformers.js pretrained model options", () => {
     expect(validTransformersOptionsConfig.transformerOptions).toMatchObject({
@@ -43,3 +50,4 @@ describe("public Transformers.js option types", () => {
 
 void invalidTransformersOptionsConfig;
 void invalidSequenceClassifierPair;
+void validRankOptions;

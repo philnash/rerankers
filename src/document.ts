@@ -19,14 +19,14 @@ export function normalizeDocuments<TDocument extends RerankDocument>(
   });
 }
 
-export function normalizeK(options: RankOptions | undefined, documentCount: number): number {
-  if (options?.k === undefined) {
+export function normalizeTopK(options: RankOptions | undefined, documentCount: number): number {
+  if (options?.topK === undefined) {
     return documentCount;
   }
 
-  if (!Number.isInteger(options.k) || options.k < 1) {
-    throw new RerankerInputError("rank option k must be a positive integer.");
+  if (!Number.isInteger(options.topK) || options.topK < 1) {
+    throw new RerankerInputError("rank option topK must be a positive integer.");
   }
 
-  return Math.min(options.k, documentCount);
+  return Math.min(options.topK, documentCount);
 }

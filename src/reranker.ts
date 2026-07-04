@@ -1,4 +1,4 @@
-import { normalizeDocuments, normalizeK } from "./document.js";
+import { normalizeDocuments, normalizeTopK } from "./document.js";
 import { resolvePreset } from "./presets.js";
 import { createCrossEncoderStrategy } from "./strategies/cross-encoder.js";
 import { LateInteractionStrategy } from "./strategies/late-interaction.js";
@@ -35,9 +35,9 @@ export class Reranker {
       return [];
     }
 
-    const k = normalizeK(options, normalized.length);
+    const topK = normalizeTopK(options, normalized.length);
     const results = await this.strategy.score(query, normalized);
-    return [...results].sort((left, right) => right.score - left.score).slice(0, k);
+    return [...results].sort((left, right) => right.score - left.score).slice(0, topK);
   }
 }
 

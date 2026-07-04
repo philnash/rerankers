@@ -38,7 +38,7 @@ function strategyFromScores(scores: number[]): FakeStrategy {
 }
 
 describe("Reranker", () => {
-  it("creates a mixedbread preset and returns the top k results in score order", async () => {
+  it("creates a mixedbread preset and returns the topK results in score order", async () => {
     const strategy = strategyFromScores([0.2, 0.9, 0.4]);
     const reranker = await Reranker.create("mixedbread-base", {
       strategyFactory: (config) => {
@@ -51,7 +51,7 @@ describe("Reranker", () => {
       },
     });
 
-    const results = await reranker.rank("red planet", ["Venus", "Mars", "Jupiter"], { k: 2 });
+    const results = await reranker.rank("red planet", ["Venus", "Mars", "Jupiter"], { topK: 2 });
 
     expect(results).toEqual([
       { document: "Mars", index: 1, score: 0.9 },
@@ -85,7 +85,7 @@ describe("Reranker", () => {
     });
 
     await expect(reranker.rank("query", [])).resolves.toEqual([]);
-    await expect(reranker.rank("query", [], { k: -1 })).resolves.toEqual([]);
+    await expect(reranker.rank("query", [], { topK: -1 })).resolves.toEqual([]);
     expect(strategy.callCount()).toBe(0);
   });
 
@@ -115,12 +115,12 @@ describe("Reranker", () => {
     await expect(Reranker.create("not-a-model")).rejects.toBeInstanceOf(UnknownPresetError);
   });
 
-  it("throws when k is not a positive integer", async () => {
+  it("throws when topK is not a positive integer", async () => {
     const reranker = await Reranker.create("bge", {
       strategyFactory: () => Promise.resolve(strategyFromScores([1])),
     });
 
-    await expect(reranker.rank("query", ["doc"], { k: 0 })).rejects.toBeInstanceOf(
+    await expect(reranker.rank("query", ["doc"], { topK: 0 })).rejects.toBeInstanceOf(
       RerankerInputError,
     );
   });
