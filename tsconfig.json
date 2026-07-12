@@ -15,5 +15,5 @@
     "target": "ES2022",
     "verbatimModuleSyntax": true
   },
-  "include": ["src", "test", "tsup.config.ts"]
+  "include": ["src", "test", "demo/src", "demo/vite.config.ts", "tsup.config.ts"]
 }

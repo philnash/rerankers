@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Experiment with local, browser-based document reranking models."
+    />
+    <title>rerankers browser demo</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <main>
+      <div class="page-shell">
+        <header class="hero reveal">
+          <h1>🔀 rerankers</h1>
+          <p class="hero-copy">
+            Use open reranking models to compare documents against a query in the browser or
+            Node.js. This demo runs entirely in your browser; the first run downloads the model and
+            caches it locally.
+          </p>
+          <aside class="package-info" aria-labelledby="package-info-heading">
+            <h2 id="package-info-heading">Use it in your project</h2>
+            <p>
+              Install the package, then import <code>Reranker</code> to rank documents locally in
+              your JavaScript or TypeScript application.
+            </p>
+            <div class="install-command">
+              <span>Install with npm</span>
+              <code>npm install rerankers</code>
+            </div>
+            <a class="repository-button" href="https://github.com/philnash/rerankers">
+              View on GitHub <span aria-hidden="true">↗</span>
+            </a>
+          </aside>
+        </header>
+
+        <form id="ranking-form" class="workspace reveal reveal-delay-1">
+          <section class="control-panel" aria-labelledby="setup-heading">
+            <div class="section-heading">
+              <h2 id="setup-heading">Inputs</h2>
+            </div>
+
+            <label class="field-label" for="model">Reranking model</label>
+            <div class="select-wrap">
+              <select id="model" name="model">
+                <option value="mixedbread-ai/mxbai-rerank-xsmall-v1">
+                  Mixedbread XSmall — Lightweight
+                </option>
+                <option value="mixedbread-ai/mxbai-rerank-base-v1">
+                  Mixedbread Base — Balanced
+                </option>
+                <option value="Xenova/bge-reranker-base">BGE Reranker Base — Alternative</option>
+              </select>
+            </div>
+            <p id="model-note" class="field-note">
+              The quickest starting point for an in-browser experiment.
+            </p>
+
+            <label class="field-label" for="query">Query</label>
+            <textarea id="query" name="query" rows="4">
+How can I reduce the initial load time of a JavaScript web application?</textarea>
+
+            <div class="documents-heading">
+              <span class="field-label">Candidate documents</span>
+              <button class="text-button" id="add-document" type="button">
+                <span>＋</span> Add document
+              </button>
+            </div>
+            <div id="document-list" class="document-list">
+              <article class="document-card" data-id="document-1">
+                <div class="document-meta">
+                  <label for="document-document-1">Document 01</label>
+                  <button class="remove-button" type="button" aria-label="Remove document 1">
+                    Remove
+                  </button>
+                </div>
+                <textarea id="document-document-1" rows="4">
+Code splitting lets a JavaScript application load only the code needed for the current page. Dynamic imports and route-based chunks can significantly reduce the initial bundle size.</textarea>
+              </article>
+              <article class="document-card" data-id="document-2">
+                <div class="document-meta">
+                  <label for="document-document-2">Document 02</label>
+                  <button class="remove-button" type="button" aria-label="Remove document 2">
+                    Remove
+                  </button>
+                </div>
+                <textarea id="document-document-2" rows="4">
+JavaScript is a programming language commonly used to add interactive behaviour to websites and build server-side applications with Node.js.</textarea>
+              </article>
+              <article class="document-card" data-id="document-3">
+                <div class="document-meta">
+                  <label for="document-document-3">Document 03</label>
+                  <button class="remove-button" type="button" aria-label="Remove document 3">
+                    Remove
+                  </button>
+                </div>
+                <textarea id="document-document-3" rows="4">
+Compressing images, serving modern formats such as WebP or AVIF, and lazy-loading below-the-fold media can improve page load performance.</textarea>
+              </article>
+            </div>
+
+            <div id="form-error" class="error-panel" role="alert" hidden></div>
+            <button id="rank-button" class="rank-button" type="submit">
+              <span class="rank-button-label">Rank documents</span>
+              <span aria-hidden="true">↗</span>
+            </button>
+          </section>
+
+          <section class="results-panel" aria-labelledby="results-heading">
+            <div class="section-heading section-heading-light">
+              <h2 id="results-heading">Results</h2>
+            </div>
+            <div id="status" class="status" aria-live="polite"></div>
+            <div id="results" class="results-list">
+              <div class="empty-state">
+                <div class="empty-orbit" aria-hidden="true"><span>?</span></div>
+                <p>Your ranking will appear here.</p>
+                <small>Scores measure relevance to your query, not document quality.</small>
+              </div>
+            </div>
+          </section>
+        </form>
+      </div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

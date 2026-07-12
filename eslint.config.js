@@ -13,6 +13,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["dist", "node_modules", "eslint.config.js", "demo.local.mjs"],
+    ignores: ["dist", "demo/dist", "node_modules", "eslint.config.js", "demo.local.mjs"],
   },
 );

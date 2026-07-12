@@ -2,6 +2,7 @@
 
 Run local reranking models directly in your JavaScript/TypeScript application.
 
+- [Browser demo](#browser-demo)
 - [Why rerankers?](#why-rerankers)
 - [How it works](#how-it-works)
   - [Install](#install)
@@ -13,6 +14,19 @@ Run local reranking models directly in your JavaScript/TypeScript application.
   - [Vercel AI SDK](#vercel-ai-sdk)
 - [Browser And Node](#browser-and-node)
 - [License](#license)
+
+## Browser demo
+
+This repository includes an interactive browser demo for trying different models, queries, and
+document sets locally. Start it with:
+
+```sh
+npm run demo
+```
+
+The first ranking with a model downloads its weights through Transformers.js. The demo uses
+quantized weights and caches each loaded reranker for subsequent runs. Your query and documents
+remain in the browser.
 
 ## Why rerankers?
 
