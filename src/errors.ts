@@ -13,6 +13,12 @@ export class UnknownPresetError extends RerankerError {
 
 export class RerankerInputError extends RerankerError {}
 
+export class UnsupportedStrategyError extends RerankerError {
+  constructor(strategy: string) {
+    super(`Unsupported reranker strategy: ${strategy}`);
+  }
+}
+
 export class RerankerModelLoadError extends RerankerError {
   constructor(model: string, task: string | undefined, cause: unknown) {
     super(`Failed to load reranker model "${model}"${task ? ` for task "${task}"` : ""}.`, {

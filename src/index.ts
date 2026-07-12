@@ -2,6 +2,7 @@ export {
   RerankerError,
   RerankerInputError,
   RerankerModelLoadError,
+  UnsupportedStrategyError,
   UnknownPresetError,
 } from "./errors.js";
 export { presetNames, resolvePreset } from "./presets.js";
@@ -14,6 +15,7 @@ export type {
   RerankerCreateOptions,
   RerankerDefinition,
   RerankerPreset,
+  BuiltInRerankerStrategyName,
   RerankerStrategyName,
   RerankResult,
   ScoringStrategy,

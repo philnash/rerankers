@@ -78,7 +78,6 @@ Named presets should map memorable names to open Hugging Face model ids and stra
 - `mixedbread-xsmall`: `mixedbread-ai/mxbai-rerank-xsmall-v1`, cross-encoder/text-ranking.
 - `mixedbread-base`: `mixedbread-ai/mxbai-rerank-base-v1`, cross-encoder/text-ranking.
 - `mixedbread-large`: `mixedbread-ai/mxbai-rerank-large-v1`, cross-encoder/text-ranking.
-- `colbert-small`: `answerdotai/answerai-colbert-small-v1`, late-interaction, experimental.
 
 ModernBERT should be supported through custom model configuration in the first version. A named ModernBERT preset should only be added after identifying a specific Transformers.js-compatible model and scoring path.
 
@@ -98,16 +97,9 @@ The implementation should accept Transformers.js output shapes seen from pipelin
 
 The first implementation should use the high-level Transformers.js `pipeline()` API where possible, while keeping a loader boundary injectable for tests.
 
-### Late Interaction
+### Strategy Extension
 
-Late interaction is needed for ColBERT-style models. It independently embeds query and document tokens, then computes a MaxSim score:
-
-1. Encode the query into token vectors.
-2. Encode each document into token vectors.
-3. For each query token, find the maximum dot product against document token vectors.
-4. Sum those maximums to produce a relevance score.
-
-This strategy must be isolated behind the same strategy interface as cross-encoders. It should be available through custom configuration and the experimental `colbert-small` preset, but documented as dependent on the selected model exposing usable token-level vectors through Transformers.js.
+The first version should only ship the cross-encoder implementation. The `strategy` field and injectable `strategyFactory` should remain as the extension point for future reranking strategies or project-specific model integrations.
 
 ## Error Handling
 
@@ -133,7 +125,8 @@ Unit tests should avoid network downloads by injecting fake Transformers.js load
 - Invalid `k`.
 - Unknown preset.
 - Cross-encoder score normalization from representative output shapes.
-- Late-interaction MaxSim scoring with fixed vectors.
+- Custom strategy names passed to an injected strategy factory.
+- Unsupported strategy names throwing clearly when no custom strategy factory is provided.
 
 Integration tests that download real Hugging Face models are optional and should be opt-in, not part of the default test suite.
 
@@ -147,7 +140,7 @@ The README should include:
 - Preset table.
 - Custom model configuration.
 - Explanation that models are downloaded/cached by Transformers.js.
-- Note that late-interaction/ColBERT support is experimental and model-dependent.
+- Explanation of the custom strategy extension point.
 
 ## References Checked
 
@@ -155,12 +148,11 @@ The README should include:
 - `Xenova/bge-reranker-base` advertises Transformers.js `text-ranking` usage.
 - `Xenova/ms-marco-MiniLM-L-6-v2` advertises Transformers.js sequence-classification usage.
 - `mixedbread-ai/mxbai-rerank-xsmall-v1`, `mixedbread-ai/mxbai-rerank-base-v1`, and `mixedbread-ai/mxbai-rerank-large-v1` advertise Transformers.js `text-ranking` usage.
-- `answerdotai/answerai-colbert-small-v1` is an open ColBERT-style late-interaction model with ONNX files, but its Transformers.js scoring path needs a model-vector compatibility boundary.
 
 ## Self-Review
 
 - No placeholder requirements remain.
 - Browser compatibility is explicit.
 - Mixedbread models are first-class presets.
-- Late-interaction models are included without pretending they behave like cross-encoders.
+- Strategy extension remains possible without including additional strategy implementations in the first version.
 - ModernBERT is supported by the custom configuration path until a concrete Transformers.js-compatible reranking model is selected.

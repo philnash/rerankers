@@ -19,14 +19,13 @@ This package uses `@huggingface/transformers`. Models are downloaded and cached 
 
 ## Presets
 
-| Preset              | Model                                   | Strategy                       |
-| ------------------- | --------------------------------------- | ------------------------------ |
-| `bge`               | `Xenova/bge-reranker-base`              | cross-encoder                  |
-| `minilm`            | `Xenova/ms-marco-MiniLM-L-6-v2`         | cross-encoder                  |
-| `mixedbread-xsmall` | `mixedbread-ai/mxbai-rerank-xsmall-v1`  | cross-encoder                  |
-| `mixedbread-base`   | `mixedbread-ai/mxbai-rerank-base-v1`    | cross-encoder                  |
-| `mixedbread-large`  | `mixedbread-ai/mxbai-rerank-large-v1`   | cross-encoder                  |
-| `colbert-small`     | `answerdotai/answerai-colbert-small-v1` | late-interaction, experimental |
+| Preset              | Model                                  | Strategy      |
+| ------------------- | -------------------------------------- | ------------- |
+| `bge`               | `Xenova/bge-reranker-base`             | cross-encoder |
+| `minilm`            | `Xenova/ms-marco-MiniLM-L-6-v2`        | cross-encoder |
+| `mixedbread-xsmall` | `mixedbread-ai/mxbai-rerank-xsmall-v1` | cross-encoder |
+| `mixedbread-base`   | `mixedbread-ai/mxbai-rerank-base-v1`   | cross-encoder |
+| `mixedbread-large`  | `mixedbread-ai/mxbai-rerank-large-v1`  | cross-encoder |
 
 ## Custom Models
 
@@ -150,8 +149,6 @@ const model = rerankers.rerankingModel("bge", {
 });
 ```
 
-## Late Interaction
+## Strategy Extension
 
-ColBERT-style models score token vectors with late interaction instead of returning one cross-encoder score. The library includes the MaxSim scoring primitive and an experimental late-interaction strategy boundary, but model-specific vector extraction depends on what the selected Transformers.js-compatible model exposes.
-
-For production ColBERT use, provide a custom `strategyFactory` until the chosen model's token-vector path is verified.
+The built-in presets use cross-encoder models. The `strategyFactory` option is the extension point for future reranking strategies or project-specific model integrations.

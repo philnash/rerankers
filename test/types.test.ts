@@ -35,6 +35,11 @@ const validRankOptions: RankOptions = {
   topK: 3,
 };
 
+const customStrategyConfig: RerankerConfig = {
+  model: "example/custom-reranker",
+  strategy: "custom-strategy",
+};
+
 // @ts-expect-error rank options should use topK, not k.
 void ({ k: 1 } satisfies RankOptions);
 
@@ -51,3 +56,4 @@ describe("public Transformers.js option types", () => {
 void invalidTransformersOptionsConfig;
 void invalidSequenceClassifierPair;
 void validRankOptions;
+void customStrategyConfig;

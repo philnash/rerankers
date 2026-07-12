@@ -1,9 +1,10 @@
 import type { PretrainedModelOptions } from "@huggingface/transformers";
 
 export type RerankerPreset =
-  "bge" | "minilm" | "mixedbread-xsmall" | "mixedbread-base" | "mixedbread-large" | "colbert-small";
+  "bge" | "minilm" | "mixedbread-xsmall" | "mixedbread-base" | "mixedbread-large";
 
-export type RerankerStrategyName = "cross-encoder" | "late-interaction";
+export type BuiltInRerankerStrategyName = "cross-encoder";
+export type RerankerStrategyName = BuiltInRerankerStrategyName | (string & {});
 
 export type RerankDocument<TMetadata = unknown> =
   | string
@@ -32,7 +33,6 @@ export type RerankerConfig = {
   strategy: RerankerStrategyName;
   task?: string;
   transformerOptions?: TransformerOptions;
-  experimental?: boolean;
 };
 
 export type RankOptions = {

@@ -1,7 +1,7 @@
 import { normalizeDocuments, normalizeTopK } from "./document.js";
+import { UnsupportedStrategyError } from "./errors.js";
 import { resolvePreset } from "./presets.js";
 import { createCrossEncoderStrategy } from "./strategies/cross-encoder.js";
-import { LateInteractionStrategy } from "./strategies/late-interaction.js";
 import type {
   RankOptions,
   RerankerConfig,
@@ -46,11 +46,5 @@ function createDefaultStrategy(config: RerankerConfig): Promise<ScoringStrategy>
     return Promise.resolve(createCrossEncoderStrategy(config));
   }
 
-  return Promise.resolve(
-    new LateInteractionStrategy(() => {
-      throw new Error(
-        "Late-interaction models need a token-vector embedder. Provide a custom strategyFactory for this model.",
-      );
-    }),
-  );
+  throw new UnsupportedStrategyError(config.strategy);
 }

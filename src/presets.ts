@@ -27,11 +27,6 @@ const presets = {
     strategy: "cross-encoder",
     task: "text-ranking",
   },
-  "colbert-small": {
-    model: "answerdotai/answerai-colbert-small-v1",
-    strategy: "late-interaction",
-    experimental: true,
-  },
 } satisfies Record<RerankerPreset, RerankerConfig>;
 
 export function resolvePreset(preset: string): RerankerConfig {

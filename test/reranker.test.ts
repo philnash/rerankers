@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   Reranker,
   RerankerInputError,
+  UnsupportedStrategyError,
   UnknownPresetError,
   type NormalizedDocument,
   type RerankerConfig,
@@ -109,6 +110,32 @@ describe("Reranker", () => {
     await expect(reranker.rank("query", ["doc"])).resolves.toEqual([
       { document: "doc", index: 0, score: 1 },
     ]);
+  });
+
+  it("passes custom strategy names to a custom strategy factory", async () => {
+    const customConfig: RerankerConfig = {
+      model: "example/custom-reranker",
+      strategy: "custom-strategy",
+    };
+    const reranker = await Reranker.create(customConfig, {
+      strategyFactory: (config) => {
+        expect(config).toEqual(customConfig);
+        return Promise.resolve(strategyFromScores([1]));
+      },
+    });
+
+    await expect(reranker.rank("query", ["doc"])).resolves.toEqual([
+      { document: "doc", index: 0, score: 1 },
+    ]);
+  });
+
+  it("throws a clear error when the default factory receives an unsupported strategy", async () => {
+    await expect(
+      Reranker.create({
+        model: "example/custom-reranker",
+        strategy: "custom-strategy",
+      }),
+    ).rejects.toBeInstanceOf(UnsupportedStrategyError);
   });
 
   it("throws a clear error for an unknown preset", async () => {

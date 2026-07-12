@@ -37,7 +37,6 @@
     "reranking",
     "transformers.js",
     "huggingface",
-    "colbert",
     "mixedbread"
   ],
   "license": "MIT",

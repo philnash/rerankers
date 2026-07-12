@@ -4,7 +4,7 @@
 
 **Goal:** Build a browser-compatible TypeScript reranking library over Transformers.js with simple presets, custom model configuration, and test-driven coverage.
 
-**Architecture:** The public `Reranker` class resolves a preset or custom config, lazy-loads a scoring strategy, normalizes documents, scores them, and returns sorted results. Strategy implementations are isolated so cross-encoder rerankers and late-interaction models share the same public API.
+**Architecture:** The public `Reranker` class resolves a preset or custom config, lazy-loads a scoring strategy, normalizes documents, scores them, and returns sorted results. Strategy implementations are isolated behind a shared interface so additional reranking strategies can be added later without changing the public ranking API.
 
 **Tech Stack:** TypeScript, ESM, `@huggingface/transformers`, Vitest, ESLint, Prettier, tsup.
 
@@ -24,7 +24,6 @@
 - `src/document.ts`: document normalization and `k` validation.
 - `src/scoring.ts`: score extraction helpers.
 - `src/strategies/cross-encoder.ts`: cross-encoder strategy.
-- `src/strategies/late-interaction.ts`: late-interaction MaxSim strategy.
 - `src/reranker.ts`: main `Reranker` class.
 - `test/*.test.ts`: unit tests written before implementation.
 - `README.md`: usage documentation and preset table.
@@ -55,15 +54,9 @@
 - [ ] Implement cross-encoder loading through `@huggingface/transformers` behind an injectable loader.
 - [ ] Run `npm test` and verify cross-encoder tests pass.
 
-### Task 5: Late-Interaction Strategy
+### Task 5: README And Final Verification
 
-- [ ] Write failing tests for deterministic MaxSim scoring with fixed query/document vectors.
-- [ ] Implement late-interaction scoring behind an injectable embedding function.
-- [ ] Run `npm test` and verify late-interaction tests pass.
-
-### Task 6: README And Final Verification
-
-- [ ] Document quick start, browser usage, Node usage, presets, custom configuration, and experimental ColBERT/late-interaction support.
+- [ ] Document quick start, browser usage, Node usage, presets, custom configuration, and the custom strategy extension point.
 - [ ] Run `npm run format`.
 - [ ] Run `npm run lint`.
 - [ ] Run `npm run typecheck`.
@@ -72,7 +65,7 @@
 
 ## Self-Review
 
-- The plan covers the approved spec including mixedbread presets and experimental late interaction.
+- The plan covers the approved spec including mixedbread presets and keeps the strategy boundary open for future implementations.
 - Default tests avoid live Hugging Face downloads.
 - There are no placeholders or deferred implementation sections.
 - The workspace is not a git repository, so commit steps are intentionally omitted.
