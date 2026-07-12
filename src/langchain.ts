@@ -5,10 +5,10 @@ import { Reranker } from "./reranker.js";
 import type {
   RankOptions,
   RerankerConfig,
-  RerankerCreateOptions,
   RerankerStrategyName,
   RerankDocument,
   RerankResult,
+  StrategyFactory,
   TransformerOptions,
 } from "./types.js";
 
@@ -36,7 +36,7 @@ export type LocalRerankerArgs =
       model: string;
       strategy?: RerankerStrategyName;
       transformerOptions?: TransformerOptions;
-      createOptions?: RerankerCreateOptions;
+      strategyFactory?: StrategyFactory;
       reranker?: never;
       topK?: number;
     }
@@ -45,7 +45,7 @@ export type LocalRerankerArgs =
       model?: never;
       strategy?: never;
       transformerOptions?: never;
-      createOptions?: never;
+      strategyFactory?: never;
       topK?: number;
     };
 
@@ -61,10 +61,10 @@ export class LocalReranker extends BaseDocumentCompressor {
       (fields.model !== undefined ||
         fields.strategy !== undefined ||
         fields.transformerOptions !== undefined ||
-        fields.createOptions !== undefined)
+        fields.strategyFactory !== undefined)
     ) {
       throw new Error(
-        "LocalReranker accepts either model options/createOptions or reranker, not both.",
+        "LocalReranker accepts either model options/strategyFactory or reranker, not both.",
       );
     }
 
@@ -74,7 +74,11 @@ export class LocalReranker extends BaseDocumentCompressor {
       return;
     }
 
-    this.reranker = Reranker.create(toRerankerConfig(fields), fields.createOptions);
+    const createOptions =
+      fields.strategyFactory === undefined
+        ? undefined
+        : { strategyFactory: fields.strategyFactory };
+    this.reranker = Reranker.create(toRerankerConfig(fields), createOptions);
   }
 
   async compressDocuments(

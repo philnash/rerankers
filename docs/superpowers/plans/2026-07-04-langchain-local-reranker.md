@@ -163,10 +163,10 @@ import type { DocumentInterface } from "@langchain/core/documents";
 import { BaseDocumentCompressor } from "@langchain/core/retrievers/document_compressors";
 
 import { Reranker } from "./reranker.js";
-import type { RankOptions, RerankerCreateOptions, RerankerDefinition } from "./types.js";
+import type { RankOptions, RerankerDefinition, StrategyFactory } from "./types.js";
 ```
 
-Define `LocalRerankerArgs`, `LocalRerankerRerankOptions`, and `LocalRerankerResult`. Store either a `Promise<Reranker>` created from `Reranker.create(model, createOptions)` or a resolved warmed reranker. Reject runtime args that include both `model` and `reranker`.
+Define `LocalRerankerArgs`, `LocalRerankerRerankOptions`, and `LocalRerankerResult`. Store either a `Promise<Reranker>` created from `Reranker.create(model, { strategyFactory })` or a resolved warmed reranker. Reject runtime args that include both `model` and `reranker`.
 
 `compressDocuments()` should call `this.rerank(documents, query)`, write `metadata.relevanceScore` on each selected original document, and return those original objects.
 
@@ -244,7 +244,7 @@ const reranker = new LocalReranker({
 const documents = await reranker.compressDocuments(results, query);
 ```
 
-Mention `metadata.relevanceScore`, `createOptions`, and warmed `reranker` advanced usage.
+Mention `metadata.relevanceScore`, `strategyFactory`, and warmed `reranker` advanced usage.
 
 Update `demo.local.mjs` to call rank with `{ topK }`.
 

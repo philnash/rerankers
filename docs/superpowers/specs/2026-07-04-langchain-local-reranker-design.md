@@ -51,9 +51,7 @@ Default construction creates the underlying core reranker:
 ```ts
 const compressor = new LocalReranker({
   model: "mixedbread-base",
-  createOptions: {
-    strategyFactory,
-  },
+  strategyFactory,
   topK: 5,
 });
 ```
@@ -67,7 +65,7 @@ const compressor = new LocalReranker({
 });
 ```
 
-The two construction modes should be mutually exclusive. `model` is a `RerankerDefinition`; `createOptions` is passed directly to `Reranker.create(model, createOptions)`. If `model` is omitted, the adapter should use the core default model.
+The two construction modes should be mutually exclusive. `model` is a `RerankerDefinition`; `strategyFactory` is passed through to `Reranker.create(model, { strategyFactory })`. If `model` is omitted, the adapter should use the core default model.
 
 The advanced `reranker` option exists for lifecycle control, sharing an already-warmed model instance, and tests that supply a fake rank implementation.
 
@@ -77,14 +75,14 @@ Suggested type shape:
 type LocalRerankerArgs =
   | {
       model?: RerankerDefinition;
-      createOptions?: RerankerCreateOptions;
+      strategyFactory?: StrategyFactory;
       reranker?: never;
       topK?: number;
     }
   | {
       reranker: Reranker;
       model?: never;
-      createOptions?: never;
+      strategyFactory?: never;
       topK?: number;
     };
 ```
@@ -168,6 +166,6 @@ The README should:
 
 - update core examples from `{ k: ... }` to `{ topK: ... }`
 - add a LangChain section using `LocalReranker`
-- show `createOptions` passed through to `Reranker.create()`
+- show `strategyFactory` passed through to `Reranker.create()`
 - mention the warmed-instance `reranker` option as advanced usage
 - document that returned LangChain documents receive `metadata.relevanceScore`

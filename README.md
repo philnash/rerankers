@@ -2,17 +2,17 @@
 
 Run local reranking models directly in your JavaScript/TypeScript application.
 
-* [Why rerankers?](#why-rerankers)
-* [How it works](#how-it-works)
-  * [Install](#install)
-  * [Using the library](#using-the-library)
-  * [Model config](#model-config)
-  * [Documents](#documents)
-* [Ecosystem plugins](#ecosystem-plugins)
-  * [LangChain](#langchain)
-  * [Vercel AI SDK](#vercel-ai-sdk)
-* [Browser And Node](#browser-and-node)
-* [License](#license)
+- [Why rerankers?](#why-rerankers)
+- [How it works](#how-it-works)
+  - [Install](#install)
+  - [Using the library](#using-the-library)
+  - [Model config](#model-config)
+  - [Documents](#documents)
+- [Ecosystem plugins](#ecosystem-plugins)
+  - [LangChain](#langchain)
+  - [Vercel AI SDK](#vercel-ai-sdk)
+- [Browser And Node](#browser-and-node)
+- [License](#license)
 
 ## Why rerankers?
 

@@ -40,6 +40,39 @@ function fakeReranker(scores: number[]) {
 }
 
 describe("LocalReranker", () => {
+  it("passes a top-level strategyFactory through when constructing the core reranker", async () => {
+    const local = new LocalReranker({
+      model: "mixedbread-ai/mxbai-rerank-base-v1",
+      strategyFactory: (config) => {
+        expect(config).toEqual({
+          model: "mixedbread-ai/mxbai-rerank-base-v1",
+          strategy: "cross-encoder",
+          transformerOptions: {
+            dtype: "auto",
+          },
+        });
+
+        return Promise.resolve({
+          score: (query, documents) => {
+            expect(query).toBe("planet");
+            return Promise.resolve(
+              documents.map(({ document, index }) => ({
+                document,
+                index,
+                score: index,
+              })),
+            );
+          },
+        });
+      },
+      topK: 1,
+    });
+
+    await expect(local.rerank(["Venus", "Mars"], "planet")).resolves.toEqual([
+      { index: 1, relevanceScore: 1 },
+    ]);
+  });
+
   it("compresses LangChain documents in relevance order and writes relevanceScore metadata", async () => {
     const { calls, reranker } = fakeReranker([0.2, 0.9, 0.4]);
     const local = new LocalReranker({ reranker, topK: 2 });
@@ -119,7 +152,7 @@ describe("LocalReranker", () => {
           model: "mixedbread-ai/mxbai-rerank-base-v1",
           reranker,
         } as unknown as ConstructorParameters<typeof LocalReranker>[0]),
-    ).toThrow("LocalReranker accepts either model options/createOptions or reranker, not both.");
+    ).toThrow("LocalReranker accepts either model options/strategyFactory or reranker, not both.");
   });
 
   it("accepts DocumentInterface inputs without requiring concrete Document instances", async () => {
