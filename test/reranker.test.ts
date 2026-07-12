@@ -4,7 +4,6 @@ import {
   Reranker,
   RerankerInputError,
   UnsupportedStrategyError,
-  UnknownPresetError,
   type NormalizedDocument,
   type RerankerConfig,
   type RerankDocument,
@@ -39,18 +38,20 @@ function strategyFromScores(scores: number[]): FakeStrategy {
 }
 
 describe("Reranker", () => {
-  it("creates a mixedbread preset and returns the topK results in score order", async () => {
+  it("creates a cross-encoder reranker and returns the topK results in score order", async () => {
     const strategy = strategyFromScores([0.2, 0.9, 0.4]);
-    const reranker = await Reranker.create("mixedbread-base", {
-      strategyFactory: (config) => {
-        expect(config).toMatchObject({
-          model: "mixedbread-ai/mxbai-rerank-base-v1",
-          task: "text-ranking",
-          strategy: "cross-encoder",
-        });
-        return Promise.resolve(strategy);
+    const reranker = await Reranker.create(
+      { model: "mixedbread-ai/mxbai-rerank-base-v1" },
+      {
+        strategyFactory: (config) => {
+          expect(config).toEqual({
+            model: "mixedbread-ai/mxbai-rerank-base-v1",
+            strategy: "cross-encoder",
+          });
+          return Promise.resolve(strategy);
+        },
       },
-    });
+    );
 
     const results = await reranker.rank("red planet", ["Venus", "Mars", "Jupiter"], { topK: 2 });
 
@@ -62,9 +63,12 @@ describe("Reranker", () => {
 
   it("preserves object documents and metadata", async () => {
     const strategy = strategyFromScores([0.1, 0.8]);
-    const reranker = await Reranker.create("bge", {
-      strategyFactory: () => Promise.resolve(strategy),
-    });
+    const reranker = await Reranker.create(
+      { model: "Xenova/bge-reranker-base" },
+      {
+        strategyFactory: () => Promise.resolve(strategy),
+      },
+    );
     const documents = [
       { id: "a", text: "first", metadata: { source: "alpha" } },
       { id: "b", text: "second", metadata: { source: "beta" } },
@@ -81,9 +85,12 @@ describe("Reranker", () => {
 
   it("returns an empty list without scoring when documents are empty", async () => {
     const strategy = strategyFromScores([]);
-    const reranker = await Reranker.create("minilm", {
-      strategyFactory: () => Promise.resolve(strategy),
-    });
+    const reranker = await Reranker.create(
+      { model: "Xenova/ms-marco-MiniLM-L-6-v2" },
+      {
+        strategyFactory: () => Promise.resolve(strategy),
+      },
+    );
 
     await expect(reranker.rank("query", [])).resolves.toEqual([]);
     await expect(reranker.rank("query", [], { topK: -1 })).resolves.toEqual([]);
@@ -94,7 +101,6 @@ describe("Reranker", () => {
     const customConfig: RerankerConfig = {
       model: "mixedbread-ai/mxbai-rerank-large-v1",
       strategy: "cross-encoder",
-      task: "text-ranking",
       transformerOptions: {
         device: "wasm",
         dtype: "q8",
@@ -102,7 +108,10 @@ describe("Reranker", () => {
     };
     const reranker = await Reranker.create(customConfig, {
       strategyFactory: (config) => {
-        expect(config).toEqual(customConfig);
+        expect(config).toEqual({
+          ...customConfig,
+          strategy: "cross-encoder",
+        });
         return Promise.resolve(strategyFromScores([1]));
       },
     });
@@ -112,7 +121,7 @@ describe("Reranker", () => {
     ]);
   });
 
-  it("passes custom strategy names to a custom strategy factory", async () => {
+  it("passes explicit custom strategy names to a custom strategy factory", async () => {
     const customConfig: RerankerConfig = {
       model: "example/custom-reranker",
       strategy: "custom-strategy",
@@ -130,22 +139,21 @@ describe("Reranker", () => {
   });
 
   it("throws a clear error when the default factory receives an unsupported strategy", async () => {
-    await expect(
-      Reranker.create({
-        model: "example/custom-reranker",
-        strategy: "custom-strategy",
-      }),
-    ).rejects.toBeInstanceOf(UnsupportedStrategyError);
-  });
+    const customConfig: RerankerConfig = {
+      model: "example/custom-reranker",
+      strategy: "custom-strategy",
+    };
 
-  it("throws a clear error for an unknown preset", async () => {
-    await expect(Reranker.create("not-a-model")).rejects.toBeInstanceOf(UnknownPresetError);
+    await expect(Reranker.create(customConfig)).rejects.toBeInstanceOf(UnsupportedStrategyError);
   });
 
   it("throws when topK is not a positive integer", async () => {
-    const reranker = await Reranker.create("bge", {
-      strategyFactory: () => Promise.resolve(strategyFromScores([1])),
-    });
+    const reranker = await Reranker.create(
+      { model: "Xenova/bge-reranker-base" },
+      {
+        strategyFactory: () => Promise.resolve(strategyFromScores([1])),
+      },
+    );
 
     await expect(reranker.rank("query", ["doc"], { topK: 0 })).rejects.toBeInstanceOf(
       RerankerInputError,

@@ -5,12 +5,6 @@ export class RerankerError extends Error {
   }
 }
 
-export class UnknownPresetError extends RerankerError {
-  constructor(preset: string) {
-    super(`Unknown reranker preset: ${preset}`);
-  }
-}
-
 export class RerankerInputError extends RerankerError {}
 
 export class UnsupportedStrategyError extends RerankerError {
@@ -20,8 +14,8 @@ export class UnsupportedStrategyError extends RerankerError {
 }
 
 export class RerankerModelLoadError extends RerankerError {
-  constructor(model: string, task: string | undefined, cause: unknown) {
-    super(`Failed to load reranker model "${model}"${task ? ` for task "${task}"` : ""}.`, {
+  constructor(model: string, cause: unknown) {
+    super(`Failed to load reranker model "${model}".`, {
       cause,
     });
   }

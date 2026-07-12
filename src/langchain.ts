@@ -4,10 +4,12 @@ import { BaseDocumentCompressor } from "@langchain/core/retrievers/document_comp
 import { Reranker } from "./reranker.js";
 import type {
   RankOptions,
+  RerankerConfig,
   RerankerCreateOptions,
-  RerankerDefinition,
+  RerankerStrategyName,
   RerankDocument,
   RerankResult,
+  TransformerOptions,
 } from "./types.js";
 
 export type LocalRerankerCore = {
@@ -31,7 +33,9 @@ export type LocalRerankerRerankOptions = {
 
 export type LocalRerankerArgs =
   | {
-      model?: RerankerDefinition;
+      model: string;
+      strategy?: RerankerStrategyName;
+      transformerOptions?: TransformerOptions;
       createOptions?: RerankerCreateOptions;
       reranker?: never;
       topK?: number;
@@ -39,6 +43,8 @@ export type LocalRerankerArgs =
   | {
       reranker: LocalRerankerCore;
       model?: never;
+      strategy?: never;
+      transformerOptions?: never;
       createOptions?: never;
       topK?: number;
     };
@@ -47,17 +53,28 @@ export class LocalReranker extends BaseDocumentCompressor {
   private readonly reranker: Promise<LocalRerankerCore>;
   private readonly topK: number | undefined;
 
-  constructor(fields: LocalRerankerArgs = {}) {
+  constructor(fields: LocalRerankerArgs) {
     super();
 
-    if (fields.reranker && (fields.model !== undefined || fields.createOptions !== undefined)) {
-      throw new Error("LocalReranker accepts either model/createOptions or reranker, not both.");
+    if (
+      fields.reranker &&
+      (fields.model !== undefined ||
+        fields.strategy !== undefined ||
+        fields.transformerOptions !== undefined ||
+        fields.createOptions !== undefined)
+    ) {
+      throw new Error(
+        "LocalReranker accepts either model options/createOptions or reranker, not both.",
+      );
     }
 
     this.topK = fields.topK;
-    this.reranker = fields.reranker
-      ? Promise.resolve(fields.reranker)
-      : Reranker.create(fields.model, fields.createOptions);
+    if (fields.reranker) {
+      this.reranker = Promise.resolve(fields.reranker);
+      return;
+    }
+
+    this.reranker = Reranker.create(toRerankerConfig(fields), fields.createOptions);
   }
 
   async compressDocuments(
@@ -100,6 +117,20 @@ export class LocalReranker extends BaseDocumentCompressor {
 
     return results.map(({ index, score }) => ({ index, relevanceScore: score }));
   }
+}
+
+function toRerankerConfig(fields: Extract<LocalRerankerArgs, { model: string }>): RerankerConfig {
+  const config: RerankerConfig = { model: fields.model };
+
+  if (fields.strategy !== undefined) {
+    config.strategy = fields.strategy;
+  }
+
+  if (fields.transformerOptions !== undefined) {
+    config.transformerOptions = fields.transformerOptions;
+  }
+
+  return config;
 }
 
 function getPageContent(document: LocalRerankerInput): string {

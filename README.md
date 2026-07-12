@@ -5,7 +5,7 @@ Browser-compatible TypeScript reranking over open Hugging Face models through Tr
 ```ts
 import { Reranker } from "rerankers";
 
-const reranker = await Reranker.create("mixedbread-base");
+const reranker = await Reranker.create({ model: "mixedbread-ai/mxbai-rerank-base-v1" });
 const results = await reranker.rank("Who wrote To Kill a Mockingbird?", documents, { topK: 5 });
 ```
 
@@ -17,23 +17,13 @@ npm install rerankers
 
 This package uses `@huggingface/transformers`. Models are downloaded and cached by Transformers.js.
 
-## Presets
+## Models
 
-| Preset              | Model                                  | Strategy      |
-| ------------------- | -------------------------------------- | ------------- |
-| `bge`               | `Xenova/bge-reranker-base`             | cross-encoder |
-| `minilm`            | `Xenova/ms-marco-MiniLM-L-6-v2`        | cross-encoder |
-| `mixedbread-xsmall` | `mixedbread-ai/mxbai-rerank-xsmall-v1` | cross-encoder |
-| `mixedbread-base`   | `mixedbread-ai/mxbai-rerank-base-v1`   | cross-encoder |
-| `mixedbread-large`  | `mixedbread-ai/mxbai-rerank-large-v1`  | cross-encoder |
-
-## Custom Models
+Pass a Hugging Face model ID. The strategy defaults to `cross-encoder`.
 
 ```ts
 const reranker = await Reranker.create({
   model: "mixedbread-ai/mxbai-rerank-large-v1",
-  task: "text-ranking",
-  strategy: "cross-encoder",
   transformerOptions: {
     device: "wasm",
     dtype: "q8",
@@ -76,7 +66,7 @@ Use the `LocalReranker` adapter from the `rerankers/langchain` subpath anywhere 
 import { LocalReranker } from "rerankers/langchain";
 
 const reranker = new LocalReranker({
-  model: "mixedbread-base",
+  model: "mixedbread-ai/mxbai-rerank-base-v1",
   topK: 5,
 });
 
@@ -89,7 +79,7 @@ Pass core creation options through `createOptions`:
 
 ```ts
 const reranker = new LocalReranker({
-  model: "mixedbread-base",
+  model: "mixedbread-ai/mxbai-rerank-base-v1",
   createOptions: {
     strategyFactory,
   },
@@ -102,7 +92,7 @@ For advanced lifecycle control, pass an already-created reranker:
 ```ts
 import { Reranker } from "rerankers";
 
-const coreReranker = await Reranker.create("mixedbread-base");
+const coreReranker = await Reranker.create({ model: "mixedbread-ai/mxbai-rerank-base-v1" });
 const reranker = new LocalReranker({ reranker: coreReranker, topK: 5 });
 ```
 
@@ -130,7 +120,7 @@ import { rerank } from "ai";
 import { rerankers } from "rerankers/ai-sdk";
 
 const { ranking, rerankedDocuments } = await rerank({
-  model: rerankers.rerankingModel("mixedbread-base"),
+  model: rerankers.rerankingModel({ model: "mixedbread-ai/mxbai-rerank-base-v1" }),
   query: "Which document mentions Mars?",
   documents: [
     "Venus has a thick atmosphere.",
@@ -144,11 +134,14 @@ const { ranking, rerankedDocuments } = await rerank({
 AI SDK object documents are supported with a text extractor. If you do not provide one, the adapter uses a string `text` property when present and falls back to `JSON.stringify(document)`.
 
 ```ts
-const model = rerankers.rerankingModel("bge", {
-  documentText: (document) => `${document.title}: ${document.body}`,
-});
+const model = rerankers.rerankingModel(
+  { model: "Xenova/bge-reranker-base" },
+  {
+    documentText: (document) => `${document.title}: ${document.body}`,
+  },
+);
 ```
 
 ## Strategy Extension
 
-The built-in presets use cross-encoder models. The `strategyFactory` option is the extension point for future reranking strategies or project-specific model integrations.
+The built-in strategy uses cross-encoder models. The `strategyFactory` option is the extension point for future reranking strategies or project-specific model integrations.

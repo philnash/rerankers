@@ -65,9 +65,12 @@ function deferred<T>(): {
 
 describe("AI SDK adapter", () => {
   it("works with the AI SDK rerank helper", async () => {
-    const model = createAISDKRerankingModel("mixedbread-base", {
-      strategyFactory: () => Promise.resolve(strategyFromScores([0.2, 0.9, 0.4])),
-    });
+    const model = createAISDKRerankingModel(
+      { model: "mixedbread-ai/mxbai-rerank-base-v1" },
+      {
+        strategyFactory: () => Promise.resolve(strategyFromScores([0.2, 0.9, 0.4])),
+      },
+    );
     const compatibleModel: RerankingModel = model;
 
     const result = await rerank({
@@ -87,11 +90,14 @@ describe("AI SDK adapter", () => {
 
   it("uses a document text extractor for AI SDK object documents", async () => {
     const strategy = strategyFromScores([0.1, 0.8]);
-    const model = rerankers.rerankingModel("bge", {
-      documentText: (document) =>
-        `${requireString(document.title)}: ${requireString(document.body)}`,
-      strategyFactory: () => Promise.resolve(strategy),
-    });
+    const model = rerankers.rerankingModel(
+      { model: "Xenova/bge-reranker-base" },
+      {
+        documentText: (document) =>
+          `${requireString(document.title)}: ${requireString(document.body)}`,
+        strategyFactory: () => Promise.resolve(strategy),
+      },
+    );
 
     await expect(
       model.doRerank({
@@ -124,9 +130,12 @@ describe("AI SDK adapter", () => {
     const strategy = strategyFromScores([1]);
     const abortController = new AbortController();
     abortController.abort(new Error("cancelled"));
-    const model = createAISDKRerankingModel("minilm", {
-      strategyFactory: () => Promise.resolve(strategy),
-    });
+    const model = createAISDKRerankingModel(
+      { model: "Xenova/ms-marco-MiniLM-L-6-v2" },
+      {
+        strategyFactory: () => Promise.resolve(strategy),
+      },
+    );
 
     await expect(
       model.doRerank({
@@ -142,12 +151,15 @@ describe("AI SDK adapter", () => {
     const strategy = strategyFromScores([1, 0.5]);
     const load = deferred<ScoringStrategy>();
     let loadCount = 0;
-    const model = createAISDKRerankingModel("minilm", {
-      strategyFactory: () => {
-        loadCount += 1;
-        return load.promise;
+    const model = createAISDKRerankingModel(
+      { model: "Xenova/ms-marco-MiniLM-L-6-v2" },
+      {
+        strategyFactory: () => {
+          loadCount += 1;
+          return load.promise;
+        },
       },
-    });
+    );
 
     const first = model.doRerank({
       query: "query",
@@ -184,8 +196,12 @@ describe("AI SDK adapter", () => {
   });
 });
 
-const aiSdkModel: RerankingModel = createAISDKRerankingModel();
-const localModel: AISDKRerankingModel = rerankers.rerankingModel("bge");
+const aiSdkModel: RerankingModel = createAISDKRerankingModel({
+  model: "mixedbread-ai/mxbai-rerank-base-v1",
+});
+const localModel: AISDKRerankingModel = rerankers.rerankingModel({
+  model: "Xenova/bge-reranker-base",
+});
 
 void aiSdkModel;
 void localModel;

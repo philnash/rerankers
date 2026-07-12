@@ -5,7 +5,7 @@ import { RerankerModelLoadError } from "../errors.js";
 import { extractScores } from "../scoring.js";
 import type {
   NormalizedDocument,
-  RerankerConfig,
+  NormalizedRerankerConfig,
   RerankDocument,
   RerankResult,
   ScoringStrategy,
@@ -26,14 +26,14 @@ type SequenceClassifierPair = {
 
 export type SequenceClassifierLoader = (
   model: string,
-  options?: RerankerConfig["transformerOptions"],
+  options?: NormalizedRerankerConfig["transformerOptions"],
 ) => Promise<SequenceClassifierPair>;
 
 export class CrossEncoderStrategy implements ScoringStrategy {
   private classifier: Promise<SequenceClassifierPair> | undefined;
 
   constructor(
-    private readonly config: RerankerConfig,
+    private readonly config: NormalizedRerankerConfig,
     private readonly loadClassifier: SequenceClassifierLoader = defaultSequenceClassifierLoader,
   ) {}
 
@@ -69,12 +69,12 @@ export class CrossEncoderStrategy implements ScoringStrategy {
     try {
       return await this.loadClassifier(this.config.model, this.config.transformerOptions);
     } catch (error) {
-      throw new RerankerModelLoadError(this.config.model, this.config.task, error);
+      throw new RerankerModelLoadError(this.config.model, error);
     }
   }
 }
 
-export function createCrossEncoderStrategy(config: RerankerConfig): ScoringStrategy {
+export function createCrossEncoderStrategy(config: NormalizedRerankerConfig): ScoringStrategy {
   return new CrossEncoderStrategy(config);
 }
 

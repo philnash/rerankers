@@ -5,7 +5,6 @@ import type { RankOptions, RerankerConfig } from "../src/index.js";
 
 const validTransformersOptionsConfig: RerankerConfig = {
   model: "mixedbread-ai/mxbai-rerank-base-v1",
-  strategy: "cross-encoder",
   transformerOptions: {
     device: "wasm",
     dtype: "q8",
@@ -15,7 +14,6 @@ const validTransformersOptionsConfig: RerankerConfig = {
 
 const invalidTransformersOptionsConfig: RerankerConfig = {
   model: "mixedbread-ai/mxbai-rerank-base-v1",
-  strategy: "cross-encoder",
   transformerOptions: {
     // @ts-expect-error dtype should come from Transformers.js DataType.
     dtype: "definitely-not-a-transformers-dtype",

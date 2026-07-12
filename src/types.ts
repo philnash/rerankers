@@ -1,8 +1,5 @@
 import type { PretrainedModelOptions } from "@huggingface/transformers";
 
-export type RerankerPreset =
-  "bge" | "minilm" | "mixedbread-xsmall" | "mixedbread-base" | "mixedbread-large";
-
 export type BuiltInRerankerStrategyName = "cross-encoder";
 export type RerankerStrategyName = BuiltInRerankerStrategyName | (string & {});
 
@@ -30,9 +27,12 @@ export type TransformerOptions = PretrainedModelOptions;
 
 export type RerankerConfig = {
   model: string;
-  strategy: RerankerStrategyName;
-  task?: string;
+  strategy?: RerankerStrategyName;
   transformerOptions?: TransformerOptions;
+};
+
+export type NormalizedRerankerConfig = RerankerConfig & {
+  strategy: RerankerStrategyName;
 };
 
 export type RankOptions = {
@@ -46,10 +46,8 @@ export type ScoringStrategy = {
   ): Promise<Array<RerankResult<TDocument>>>;
 };
 
-export type StrategyFactory = (config: RerankerConfig) => Promise<ScoringStrategy>;
+export type StrategyFactory = (config: NormalizedRerankerConfig) => Promise<ScoringStrategy>;
 
 export type RerankerCreateOptions = {
   strategyFactory?: StrategyFactory;
 };
-
-export type RerankerDefinition = string | RerankerConfig;

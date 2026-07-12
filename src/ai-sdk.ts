@@ -1,8 +1,7 @@
 import type { RerankingModel } from "ai";
 
-import { resolvePreset } from "./presets.js";
 import { Reranker } from "./reranker.js";
-import type { RerankerCreateOptions, RerankerDefinition } from "./types.js";
+import type { RerankerConfig, RerankerCreateOptions } from "./types.js";
 
 export type AISDKRerankingModel = Extract<RerankingModel, { readonly specificationVersion: "v4" }>;
 export type AISDKRerankingModelCallOptions = Parameters<AISDKRerankingModel["doRerank"]>[0];
@@ -18,11 +17,11 @@ export type AISDKRerankingModelOptions = RerankerCreateOptions & {
 };
 
 export function createAISDKRerankingModel(
-  definition: RerankerDefinition = "bge",
+  config: RerankerConfig,
   options: AISDKRerankingModelOptions = {},
 ): AISDKRerankingModel {
   const { documentText = defaultDocumentText, provider = "rerankers", ...createOptions } = options;
-  const modelId = resolveModelId(definition);
+  const modelId = config.model;
   let rerankerPromise: Promise<Reranker> | undefined;
 
   return {
@@ -32,7 +31,7 @@ export function createAISDKRerankingModel(
     async doRerank({ documents, query, topN, abortSignal }) {
       throwIfAborted(abortSignal);
 
-      rerankerPromise ??= Reranker.create(definition, createOptions);
+      rerankerPromise ??= Reranker.create(config, createOptions);
 
       let reranker: Reranker;
       try {
@@ -72,10 +71,6 @@ export function createAISDKRerankingModel(
 export const rerankers = {
   rerankingModel: createAISDKRerankingModel,
 } as const;
-
-function resolveModelId(definition: RerankerDefinition): string {
-  return typeof definition === "string" ? resolvePreset(definition).model : definition.model;
-}
 
 function toRankOptions(topN: number | undefined): { topK: number } | undefined {
   return topN === undefined ? undefined : { topK: topN };

@@ -1,12 +1,11 @@
 import { normalizeDocuments, normalizeTopK } from "./document.js";
 import { UnsupportedStrategyError } from "./errors.js";
-import { resolvePreset } from "./presets.js";
 import { createCrossEncoderStrategy } from "./strategies/cross-encoder.js";
 import type {
+  NormalizedRerankerConfig,
   RankOptions,
   RerankerConfig,
   RerankerCreateOptions,
-  RerankerDefinition,
   RerankDocument,
   RerankResult,
   ScoringStrategy,
@@ -16,11 +15,12 @@ export class Reranker {
   private constructor(private readonly strategy: ScoringStrategy) {}
 
   static async create(
-    definition: RerankerDefinition = "bge",
+    config: RerankerConfig,
     options: RerankerCreateOptions = {},
   ): Promise<Reranker> {
-    const config = typeof definition === "string" ? resolvePreset(definition) : { ...definition };
-    const strategy = await (options.strategyFactory ?? createDefaultStrategy)(config);
+    const strategy = await (options.strategyFactory ?? createDefaultStrategy)(
+      normalizeConfig(config),
+    );
 
     return new Reranker(strategy);
   }
@@ -41,7 +41,14 @@ export class Reranker {
   }
 }
 
-function createDefaultStrategy(config: RerankerConfig): Promise<ScoringStrategy> {
+function normalizeConfig(config: RerankerConfig): NormalizedRerankerConfig {
+  return {
+    ...config,
+    strategy: config.strategy ?? "cross-encoder",
+  };
+}
+
+function createDefaultStrategy(config: NormalizedRerankerConfig): Promise<ScoringStrategy> {
   if (config.strategy === "cross-encoder") {
     return Promise.resolve(createCrossEncoderStrategy(config));
   }

@@ -116,10 +116,10 @@ describe("LocalReranker", () => {
     expect(
       () =>
         new LocalReranker({
-          model: "mixedbread-base",
+          model: "mixedbread-ai/mxbai-rerank-base-v1",
           reranker,
         } as unknown as ConstructorParameters<typeof LocalReranker>[0]),
-    ).toThrow("LocalReranker accepts either model/createOptions or reranker, not both.");
+    ).toThrow("LocalReranker accepts either model options/createOptions or reranker, not both.");
   });
 
   it("accepts DocumentInterface inputs without requiring concrete Document instances", async () => {

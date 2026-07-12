@@ -4,7 +4,7 @@ import {
   CrossEncoderStrategy,
   type SequenceClassifierLoader,
 } from "../src/strategies/cross-encoder.js";
-import type { RerankerConfig } from "../src/index.js";
+import type { NormalizedRerankerConfig } from "../src/index.js";
 
 describe("CrossEncoderStrategy", () => {
   it("loads the configured sequence classifier once and scores query-document pairs", async () => {
@@ -23,10 +23,9 @@ describe("CrossEncoderStrategy", () => {
       }),
     );
     const loader: SequenceClassifierLoader = vi.fn(() => Promise.resolve({ model, tokenizer }));
-    const config: RerankerConfig = {
+    const config: NormalizedRerankerConfig = {
       model: "mixedbread-ai/mxbai-rerank-xsmall-v1",
       strategy: "cross-encoder",
-      task: "text-ranking",
       transformerOptions: { dtype: "q8" },
     };
     const strategy = new CrossEncoderStrategy(config, loader);
