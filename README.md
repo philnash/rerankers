@@ -1,23 +1,99 @@
-# rerankers
+<h1 style="text-align: center">🔀 rerankers 🔀</h1>
 
-Browser-compatible TypeScript reranking over open Hugging Face models through Transformers.js.
+Run local reranking models directly in your JavaScript/TypeScript application.
 
-```ts
-import { Reranker } from "rerankers";
+- [Why rerankers?](#why-rerankers)
+- [How it works](#how-it-works)
+  - [Install](#install)
+  - [Using the library](#using-the-library)
+  - [Models](#models)
+- [Documents](#documents)
+- [LangChain](#langchain)
+- [Browser And Node](#browser-and-node)
+- [Vercel AI SDK](#vercel-ai-sdk)
+- [Strategy Extension](#strategy-extension)
 
-const reranker = await Reranker.create({ model: "mixedbread-ai/mxbai-rerank-base-v1" });
-const results = await reranker.rank("Who wrote To Kill a Mockingbird?", documents, { topK: 5 });
-```
+## Why rerankers?
 
-## Install
+In RAG and other retrieval workflows, returning accurate results is a trade off between search capabilities and speed. Embedding models and vector indexes are good at returning semantically similar results fast. Cross-encoding rerankers are much more accurate, but slower, because they compare the query with each document at ranking time.
+
+This library uses [`@huggingface/transformers`](https://huggingface.co/docs/transformers.js/en/index) to make it easy to rerank documents against queries using local models.
+
+## How it works
+
+### Install
+
+Install the library from npm.
 
 ```sh
 npm install rerankers
 ```
 
-This package uses `@huggingface/transformers`. Models are downloaded and cached by Transformers.js.
+### Using the library
 
-## Models
+This package uses `@huggingface/transformers`. Models are downloaded on first use and cached by Transformers.js.
+
+```ts
+import { Reranker } from "rerankers";
+
+const query = "How can I reduce the initial load time of a JavaScript web application?";
+
+const documents = [
+  {
+    id: "doc-1",
+    text: "Code splitting lets a JavaScript application load only the code needed for the current page. Dynamic imports and route-based chunks can significantly reduce the initial bundle size.",
+  },
+  {
+    id: "doc-2",
+    text: "JavaScript is a programming language commonly used to add interactive behaviour to websites and build server-side applications with Node.js.",
+  },
+  {
+    id: "doc-3",
+    text: "Compressing images, serving modern formats such as WebP or AVIF, and lazy-loading below-the-fold media can improve page load performance.",
+  },
+  {
+    id: "doc-4",
+    text: "Tree shaking removes unused exports from a production bundle. It works best with ES modules and can reduce the amount of JavaScript downloaded during the initial page load.",
+  },
+  {
+    id: "doc-5",
+    text: "A service worker can cache application assets after the first visit, making repeat visits faster and allowing some functionality to work offline.",
+  },
+];
+
+const reranker = await Reranker.create({ model: "mixedbread-ai/mxbai-rerank-base-v1" });
+const results = await reranker.rank(query, documents, { topK: 3 });
+
+console.log(results);
+// => [
+//   {
+//     document: {
+//       id: "doc-1",
+//       text: "Code splitting lets a JavaScript application load only the code needed for the current page. Dynamic imports and route-based chunks can significantly reduce the initial bundle size."
+//     },
+//     index: 0,
+//     score: 0.9616439938545227
+//   },
+//   {
+//     document: {
+//       id: "doc-4",
+//       text: "Tree shaking removes unused exports from a production bundle. It works best with ES modules and can reduce the amount of JavaScript downloaded during the initial page load."
+//     },
+//     index: 3,
+//     score: 0.9472419619560242
+//   },
+//   {
+//     document: {
+//       id: "doc-5",
+//       text: "A service worker can cache application assets after the first visit, making repeat visits faster and allowing some functionality to work offline."
+//     },
+//     index: 4,
+//     score: 0.4266827702522278
+//   }
+// ]
+```
+
+### Models
 
 Pass a Hugging Face model ID. The strategy defaults to `cross-encoder`.
 
