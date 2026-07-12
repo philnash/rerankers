@@ -156,10 +156,13 @@ import { LocalReranker } from "rerankers/langchain";
 import { Document } from "@langchain/core/documents";
 
 // Using the documents from the first example
-const lcDocs = documents.map((doc) => new Document({
-  pageContent: doc.text,
-  metadata: { id: doc.id },
-}));
+const lcDocs = documents.map(
+  (doc) =>
+    new Document({
+      pageContent: doc.text,
+      metadata: { id: doc.id },
+    }),
+);
 
 const reranker = new LocalReranker({
   model: "mixedbread-ai/mxbai-rerank-base-v1",
@@ -178,7 +181,7 @@ const reranker = new LocalReranker({
   model: "mixedbread-ai/mxbai-rerank-base-v1",
   transformerOptions: {
     dtype: "q8",
-    device: "gpu"
+    device: "gpu",
   },
   topK: 5,
 });
