@@ -3,7 +3,7 @@ import { defineConfig } from "tsup";
 export default defineConfig({
   clean: true,
   dts: true,
-  entry: ["src/index.ts", "src/langchain.ts"],
+  entry: ["src/index.ts", "src/langchain.ts", "src/ai-sdk.ts"],
   external: ["@langchain/core"],
   format: ["esm"],
   sourcemap: true,

@@ -15,6 +15,10 @@
     "./langchain": {
       "types": "./dist/langchain.d.ts",
       "import": "./dist/langchain.js"
+    },
+    "./ai-sdk": {
+      "types": "./dist/ai-sdk.d.ts",
+      "import": "./dist/ai-sdk.js"
     }
   },
   "files": [
@@ -37,21 +41,26 @@
     "mixedbread"
   ],
   "license": "MIT",
-  "dependencies": {
-    "@huggingface/transformers": "^3.8.1"
-  },
   "peerDependencies": {
-    "@langchain/core": "^1.2.1"
+    "@langchain/core": "^1.2.1",
+    "ai": "^7.0.0"
   },
   "peerDependenciesMeta": {
     "@langchain/core": {
       "optional": true
+    },
+    "ai": {
+      "optional": true
     }
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.0",
     "@langchain/core": "^1.2.1",
     "@types/node": "^24.0.8",
+    "ai": "^7.0.15",
     "eslint": "^9.30.0",
     "prettier": "^3.6.2",
     "tsup": "^8.5.0",

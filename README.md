@@ -118,6 +118,38 @@ const results = await reranker.rerank(documents, "red planet", { topK: 5 });
 
 The package is ESM and keeps the runtime path compatible with browsers and Node.js. Use Transformers.js options such as `device` and `dtype` to tune runtime behavior.
 
+## Vercel AI SDK
+
+Install the AI SDK alongside this package, then use the `rerankers/ai-sdk` adapter anywhere AI SDK expects a reranking model.
+
+```sh
+npm install rerankers ai
+```
+
+```ts
+import { rerank } from "ai";
+import { rerankers } from "rerankers/ai-sdk";
+
+const { ranking, rerankedDocuments } = await rerank({
+  model: rerankers.rerankingModel("mixedbread-base"),
+  query: "Which document mentions Mars?",
+  documents: [
+    "Venus has a thick atmosphere.",
+    "Mars is called the Red Planet.",
+    "Jupiter is the largest planet.",
+  ],
+  topN: 2,
+});
+```
+
+AI SDK object documents are supported with a text extractor. If you do not provide one, the adapter uses a string `text` property when present and falls back to `JSON.stringify(document)`.
+
+```ts
+const model = rerankers.rerankingModel("bge", {
+  documentText: (document) => `${document.title}: ${document.body}`,
+});
+```
+
 ## Late Interaction
 
 ColBERT-style models score token vectors with late interaction instead of returning one cross-encoder score. The library includes the MaxSim scoring primitive and an experimental late-interaction strategy boundary, but model-specific vector extraction depends on what the selected Transformers.js-compatible model exposes.
