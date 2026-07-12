@@ -33,6 +33,7 @@ export type RerankerConfig = {
 
 export type NormalizedRerankerConfig = RerankerConfig & {
   strategy: RerankerStrategyName;
+  transformerOptions: TransformerOptions;
 };
 
 export type RankOptions = {

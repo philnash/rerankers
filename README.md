@@ -2,16 +2,17 @@
 
 Run local reranking models directly in your JavaScript/TypeScript application.
 
-- [Why rerankers?](#why-rerankers)
-- [How it works](#how-it-works)
-  - [Install](#install)
-  - [Using the library](#using-the-library)
-  - [Models](#models)
-- [Documents](#documents)
-- [LangChain](#langchain)
-- [Browser And Node](#browser-and-node)
-- [Vercel AI SDK](#vercel-ai-sdk)
-- [Strategy Extension](#strategy-extension)
+* [Why rerankers?](#why-rerankers)
+* [How it works](#how-it-works)
+  * [Install](#install)
+  * [Using the library](#using-the-library)
+  * [Model config](#model-config)
+  * [Documents](#documents)
+* [Ecosystem plugins](#ecosystem-plugins)
+  * [LangChain](#langchain)
+  * [Vercel AI SDK](#vercel-ai-sdk)
+* [Browser And Node](#browser-and-node)
+* [License](#license)
 
 ## Why rerankers?
 
@@ -93,9 +94,17 @@ console.log(results);
 // ]
 ```
 
-### Models
+### Model config
 
-Pass a Hugging Face model ID. The strategy defaults to `cross-encoder`.
+You can just pass a Hugging Face model ID and default options will be used to load the model. Specifically, the `dtype` will be set to `auto`.
+
+```ts
+const reranker = await Reranker.create({
+  model: "mixedbread-ai/mxbai-rerank-large-v1",
+});
+```
+
+If you want to pass more options, such as a specific dtype or device, you can pass a `transformerOptions` property like this:
 
 ```ts
 const reranker = await Reranker.create({
@@ -107,7 +116,9 @@ const reranker = await Reranker.create({
 });
 ```
 
-## Documents
+For more on [dtypes](https://huggingface.co/docs/transformers.js/en/guides/dtypes) or [device options](https://huggingface.co/docs/transformers.js/en/guides/webgpu) check the [Transformers.js documentation](https://huggingface.co/docs/transformers.js/en/index).
+
+### Documents
 
 Documents can be strings or objects. Object documents are returned unchanged.
 
@@ -128,7 +139,9 @@ type RerankResult<TDocument> = {
 };
 ```
 
-## LangChain
+## Ecosystem plugins
+
+### LangChain
 
 Install LangChain core alongside this package:
 
@@ -140,30 +153,38 @@ Use the `LocalReranker` adapter from the `rerankers/langchain` subpath anywhere 
 
 ```ts
 import { LocalReranker } from "rerankers/langchain";
+import { Document } from "@langchain/core/documents";
+
+// Using the documents from the first example
+const lcDocs = documents.map((doc) => new Document({
+  pageContent: doc.text,
+  metadata: { id: doc.id },
+}));
 
 const reranker = new LocalReranker({
   model: "mixedbread-ai/mxbai-rerank-base-v1",
   topK: 5,
 });
 
-const documents = await reranker.compressDocuments(retrievedDocuments, "red planet");
+const documents = await reranker.compressDocuments(lcDocs, query);
 ```
 
 Returned LangChain documents are the original document objects in reranked order. Each returned document receives `metadata.relevanceScore`.
 
-Pass core creation options through `createOptions`:
+You can pass `transformerOptions` in the same initializer object
 
 ```ts
 const reranker = new LocalReranker({
   model: "mixedbread-ai/mxbai-rerank-base-v1",
-  createOptions: {
-    strategyFactory,
+  transformerOptions: {
+    dtype: "q8",
+    device: "gpu"
   },
   topK: 5,
 });
 ```
 
-For advanced lifecycle control, pass an already-created reranker:
+For full lifecycle control, pass an already-created reranker:
 
 ```ts
 import { Reranker } from "rerankers";
@@ -179,11 +200,7 @@ const results = await reranker.rerank(documents, "red planet", { topK: 5 });
 // [{ index: 1, relevanceScore: 0.92 }, ...]
 ```
 
-## Browser And Node
-
-The package is ESM and keeps the runtime path compatible with browsers and Node.js. Use Transformers.js options such as `device` and `dtype` to tune runtime behavior.
-
-## Vercel AI SDK
+### Vercel AI SDK
 
 Install the AI SDK alongside this package, then use the `rerankers/ai-sdk` adapter anywhere AI SDK expects a reranking model.
 
@@ -218,6 +235,10 @@ const model = rerankers.rerankingModel(
 );
 ```
 
-## Strategy Extension
+## Browser And Node
 
-The built-in strategy uses cross-encoder models. The `strategyFactory` option is the extension point for future reranking strategies or project-specific model integrations.
+The package is ESM and keeps the runtime path compatible with browsers and Node.js. Use Transformers.js options such as `device` and `dtype` to tune runtime behavior.
+
+## License
+
+MIT

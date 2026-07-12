@@ -45,6 +45,10 @@ function normalizeConfig(config: RerankerConfig): NormalizedRerankerConfig {
   return {
     ...config,
     strategy: config.strategy ?? "cross-encoder",
+    transformerOptions: {
+      dtype: "auto",
+      ...config.transformerOptions,
+    },
   };
 }
 

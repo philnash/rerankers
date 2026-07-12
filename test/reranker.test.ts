@@ -47,6 +47,9 @@ describe("Reranker", () => {
           expect(config).toEqual({
             model: "mixedbread-ai/mxbai-rerank-base-v1",
             strategy: "cross-encoder",
+            transformerOptions: {
+              dtype: "auto",
+            },
           });
           return Promise.resolve(strategy);
         },
@@ -128,7 +131,12 @@ describe("Reranker", () => {
     };
     const reranker = await Reranker.create(customConfig, {
       strategyFactory: (config) => {
-        expect(config).toEqual(customConfig);
+        expect(config).toEqual({
+          ...customConfig,
+          transformerOptions: {
+            dtype: "auto",
+          },
+        });
         return Promise.resolve(strategyFromScores([1]));
       },
     });
