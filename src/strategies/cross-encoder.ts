@@ -81,12 +81,15 @@ export class CrossEncoderStrategy implements ScoringStrategy {
   }
 
   private async disposeClassifier(): Promise<void> {
-    const classifier = this.classifier;
+    const classifierPromise = this.classifier;
     this.classifier = undefined;
 
-    if (classifier !== undefined) {
-      await (await classifier).dispose();
+    if (classifierPromise === undefined) {
+      return;
     }
+
+    const classifier = await classifierPromise;
+    await classifier.dispose();
   }
 }
 
