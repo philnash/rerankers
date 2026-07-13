@@ -10,6 +10,7 @@ Run local reranking models directly in your JavaScript/TypeScript application.
   - [Model config](#model-config)
   - [Models](#models)
   - [Documents](#documents)
+  - [Releasing resources](#releasing-resources)
 - [Ecosystem plugins](#ecosystem-plugins)
   - [LangChain](#langchain)
   - [Vercel AI SDK](#vercel-ai-sdk)
@@ -164,6 +165,34 @@ type RerankResult<TDocument> = {
   score: number;
 };
 ```
+
+### Releasing resources
+
+A reranker keeps its model loaded so it can be reused across calls. Models can be large and occupy a significant amount of memory. When you no longer need it, call `dispose()` to release the model's inference sessions and regain the memory:
+
+```ts
+const reranker = await Reranker.create({
+  model: "mixedbread-ai/mxbai-rerank-base-v1",
+});
+
+try {
+  const results = await reranker.rank(query, documents);
+} finally {
+  await reranker.dispose();
+}
+```
+
+`Reranker` also implements `AsyncDisposable`, so runtimes that support explicit resource management can dispose it automatically:
+
+```ts
+await using reranker = await Reranker.create({
+  model: "mixedbread-ai/mxbai-rerank-base-v1",
+});
+
+const results = await reranker.rank(query, documents);
+```
+
+Disposal waits for active ranking calls to finish and is safe to call more than once. A disposed reranker cannot be used again, trying to do so will throw a `RerankerDisposedError`.
 
 ## Ecosystem plugins
 

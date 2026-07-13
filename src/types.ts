@@ -45,6 +45,7 @@ export type ScoringStrategy = {
     query: string,
     documents: Array<NormalizedDocument<TDocument>>,
   ): Promise<Array<RerankResult<TDocument>>>;
+  dispose?(): Promise<void>;
 };
 
 export type StrategyFactory = (config: NormalizedRerankerConfig) => Promise<ScoringStrategy>;

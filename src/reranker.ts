@@ -1,5 +1,5 @@
 import { normalizeDocuments, normalizeTopK } from "./document.js";
-import { UnsupportedStrategyError } from "./errors.js";
+import { RerankerDisposedError, UnsupportedStrategyError } from "./errors.js";
 import { createCrossEncoderStrategy } from "./strategies/cross-encoder.js";
 import type {
   NormalizedRerankerConfig,
@@ -11,7 +11,11 @@ import type {
   ScoringStrategy,
 } from "./types.js";
 
-export class Reranker {
+export class Reranker implements AsyncDisposable {
+  private readonly activeRanks = new Set<Promise<unknown>>();
+  private disposePromise: Promise<void> | undefined;
+  private disposed = false;
+
   private constructor(private readonly strategy: ScoringStrategy) {}
 
   static async create(
@@ -30,6 +34,34 @@ export class Reranker {
     documents: readonly TDocument[],
     options?: RankOptions,
   ): Promise<Array<RerankResult<TDocument>>> {
+    if (this.disposed) {
+      throw new RerankerDisposedError();
+    }
+
+    const operation = this.rankDocuments(query, documents, options);
+    this.activeRanks.add(operation);
+
+    try {
+      return await operation;
+    } finally {
+      this.activeRanks.delete(operation);
+    }
+  }
+
+  dispose(): Promise<void> {
+    this.disposePromise ??= this.disposeStrategy();
+    return this.disposePromise;
+  }
+
+  [Symbol.asyncDispose](): Promise<void> {
+    return this.dispose();
+  }
+
+  private async rankDocuments<TDocument extends RerankDocument>(
+    query: string,
+    documents: readonly TDocument[],
+    options?: RankOptions,
+  ): Promise<Array<RerankResult<TDocument>>> {
     const normalized = normalizeDocuments(documents);
     if (normalized.length === 0) {
       return [];
@@ -38,6 +70,12 @@ export class Reranker {
     const topK = normalizeTopK(options, normalized.length);
     const results = await this.strategy.score(query, normalized);
     return [...results].sort((left, right) => right.score - left.score).slice(0, topK);
+  }
+
+  private async disposeStrategy(): Promise<void> {
+    this.disposed = true;
+    await Promise.allSettled([...this.activeRanks]);
+    await this.strategy.dispose?.();
   }
 }
 

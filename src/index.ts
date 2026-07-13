@@ -1,5 +1,6 @@
 export {
   RerankerError,
+  RerankerDisposedError,
   RerankerInputError,
   RerankerModelLoadError,
   UnsupportedStrategyError,

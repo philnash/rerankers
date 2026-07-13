@@ -27,6 +27,7 @@ const invalidSequenceClassifierPair: Awaited<ReturnType<SequenceClassifierLoader
     attention_mask: [[1]],
     input_ids: [[101]],
   }),
+  dispose: () => Promise.resolve(),
 };
 
 const validRankOptions: RankOptions = {

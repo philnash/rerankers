@@ -22,7 +22,10 @@ describe("CrossEncoderStrategy", () => {
         },
       }),
     );
-    const loader: SequenceClassifierLoader = vi.fn(() => Promise.resolve({ model, tokenizer }));
+    const dispose = vi.fn(() => Promise.resolve());
+    const loader: SequenceClassifierLoader = vi.fn(() =>
+      Promise.resolve({ dispose, model, tokenizer }),
+    );
     const config: NormalizedRerankerConfig = {
       model: "mixedbread-ai/mxbai-rerank-xsmall-v1",
       strategy: "cross-encoder",
@@ -47,5 +50,23 @@ describe("CrossEncoderStrategy", () => {
       { document: "first", index: 0, score: 0.2 },
       { document: "second", index: 1, score: 0.9 },
     ]);
+
+    await strategy.dispose();
+    await strategy.dispose();
+    expect(dispose).toHaveBeenCalledOnce();
+  });
+
+  it("does not load the classifier when disposed before scoring", async () => {
+    const loader: SequenceClassifierLoader = vi.fn();
+    const config: NormalizedRerankerConfig = {
+      model: "mixedbread-ai/mxbai-rerank-xsmall-v1",
+      strategy: "cross-encoder",
+      transformerOptions: { dtype: "q8" },
+    };
+    const strategy = new CrossEncoderStrategy(config, loader);
+
+    await strategy.dispose();
+
+    expect(loader).not.toHaveBeenCalled();
   });
 });

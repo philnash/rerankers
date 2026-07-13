@@ -7,6 +7,12 @@ export class RerankerError extends Error {
 
 export class RerankerInputError extends RerankerError {}
 
+export class RerankerDisposedError extends RerankerError {
+  constructor() {
+    super("Cannot rank with a disposed reranker.");
+  }
+}
+
 export class UnsupportedStrategyError extends RerankerError {
   constructor(strategy: string) {
     super(`Unsupported reranker strategy: ${strategy}`);

@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   Reranker,
+  RerankerDisposedError,
   RerankerInputError,
   UnsupportedStrategyError,
   type NormalizedDocument,
@@ -166,5 +167,52 @@ describe("Reranker", () => {
     await expect(reranker.rank("query", ["doc"], { topK: 0 })).rejects.toBeInstanceOf(
       RerankerInputError,
     );
+  });
+
+  it("disposes its strategy once and rejects subsequent ranks", async () => {
+    const strategy = strategyFromScores([1]);
+    const dispose = vi.fn(() => Promise.resolve());
+    strategy.dispose = dispose;
+    const reranker = await Reranker.create(
+      { model: "Xenova/bge-reranker-base" },
+      { strategyFactory: () => Promise.resolve(strategy) },
+    );
+
+    await reranker.dispose();
+    await reranker.dispose();
+    await reranker[Symbol.asyncDispose]();
+
+    expect(dispose).toHaveBeenCalledOnce();
+    await expect(reranker.rank("query", ["doc"])).rejects.toBeInstanceOf(RerankerDisposedError);
+    expect(strategy.callCount()).toBe(0);
+  });
+
+  it("waits for an active rank before disposing its strategy", async () => {
+    let finishScoring: (() => void) | undefined;
+    const scoringFinished = new Promise<void>((resolve) => {
+      finishScoring = resolve;
+    });
+    const score: ScoringStrategy["score"] = async <TDocument extends RerankDocument>(
+      _query: string,
+      documents: Array<NormalizedDocument<TDocument>>,
+    ): Promise<Array<RerankResult<TDocument>>> => {
+      await scoringFinished;
+      return documents.map(({ document, index }) => ({ document, index, score: 1 }));
+    };
+    const dispose = vi.fn(() => Promise.resolve());
+    const reranker = await Reranker.create(
+      { model: "Xenova/bge-reranker-base" },
+      { strategyFactory: () => Promise.resolve({ score, dispose }) },
+    );
+
+    const rankPromise = reranker.rank("query", ["doc"]);
+    const disposePromise = reranker.dispose();
+    await Promise.resolve();
+
+    expect(dispose).not.toHaveBeenCalled();
+    finishScoring?.();
+    await rankPromise;
+    await disposePromise;
+    expect(dispose).toHaveBeenCalledOnce();
   });
 });

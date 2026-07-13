@@ -22,6 +22,7 @@ type SequenceClassifier = (inputs: TokenizerOutput) => Promise<unknown>;
 type SequenceClassifierPair = {
   model: SequenceClassifier;
   tokenizer: Tokenizer;
+  dispose(): Promise<void>;
 };
 
 export type SequenceClassifierLoader = (
@@ -31,6 +32,7 @@ export type SequenceClassifierLoader = (
 
 export class CrossEncoderStrategy implements ScoringStrategy {
   private classifier: Promise<SequenceClassifierPair> | undefined;
+  private disposePromise: Promise<void> | undefined;
 
   constructor(
     private readonly config: NormalizedRerankerConfig,
@@ -56,6 +58,11 @@ export class CrossEncoderStrategy implements ScoringStrategy {
     }));
   }
 
+  dispose(): Promise<void> {
+    this.disposePromise ??= this.disposeClassifier();
+    return this.disposePromise;
+  }
+
   private getClassifier(): Promise<SequenceClassifierPair> {
     this.classifier ??= this.load().catch((error: unknown) => {
       this.classifier = undefined;
@@ -70,6 +77,15 @@ export class CrossEncoderStrategy implements ScoringStrategy {
       return await this.loadClassifier(this.config.model, this.config.transformerOptions);
     } catch (error) {
       throw new RerankerModelLoadError(this.config.model, error);
+    }
+  }
+
+  private async disposeClassifier(): Promise<void> {
+    const classifier = this.classifier;
+    this.classifier = undefined;
+
+    if (classifier !== undefined) {
+      await (await classifier).dispose();
     }
   }
 }
@@ -87,5 +103,8 @@ const defaultSequenceClassifierLoader: SequenceClassifierLoader = async (modelId
   return {
     model: (inputs) => Promise.resolve(model(inputs)),
     tokenizer: (...args) => tokenizer._call(...args),
+    dispose: async () => {
+      await model.dispose();
+    },
   };
 };
