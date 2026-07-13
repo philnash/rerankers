@@ -31,6 +31,8 @@
     "demo:build": "vite build --config demo/vite.config.ts",
     "format": "prettier --write .",
     "lint": "eslint .",
+    "models:benchmark": "npm run build && node scripts/benchmark-models.ts",
+    "models:clean": "node scripts/clean-model-cache.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "check": "npm run lint && npm run typecheck && npm run format"

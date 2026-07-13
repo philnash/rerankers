@@ -2,11 +2,13 @@
   "compilerOptions": {
     "declaration": true,
     "declarationMap": true,
+    "allowImportingTsExtensions": true,
     "exactOptionalPropertyTypes": true,
     "isolatedModules": true,
     "lib": ["ES2022", "DOM"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "noEmit": true,
     "noUncheckedIndexedAccess": true,
     "outDir": "dist",
     "rootDir": ".",
@@ -15,5 +17,5 @@
     "target": "ES2022",
     "verbatimModuleSyntax": true
   },
-  "include": ["src", "test", "demo/src", "demo/vite.config.ts", "tsup.config.ts"]
+  "include": ["src", "test", "demo/src", "demo/vite.config.ts", "scripts", "tsup.config.ts"]
 }

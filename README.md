@@ -2,37 +2,30 @@
 
 Run local reranking models directly in your JavaScript/TypeScript application.
 
-- [Browser demo](#browser-demo)
-- [Why rerankers?](#why-rerankers)
-- [How it works](#how-it-works)
-  - [Install](#install)
-  - [Using the library](#using-the-library)
-  - [Model config](#model-config)
-  - [Documents](#documents)
-- [Ecosystem plugins](#ecosystem-plugins)
-  - [LangChain](#langchain)
-  - [Vercel AI SDK](#vercel-ai-sdk)
-- [Browser And Node](#browser-and-node)
-- [License](#license)
+* [Why rerankers?](#why-rerankers)
+  * [Demo](#demo)
+* [How it works](#how-it-works)
+  * [Install](#install)
+  * [Using the library](#using-the-library)
+  * [Model config](#model-config)
+  * [Models](#models)
+  * [Documents](#documents)
+* [Ecosystem plugins](#ecosystem-plugins)
+  * [LangChain](#langchain)
+  * [Vercel AI SDK](#vercel-ai-sdk)
+* [Browser And Node](#browser-and-node)
+* [License](#license)
 
-## Browser demo
-
-This repository includes an interactive browser demo for trying different models, queries, and
-document sets locally. Start it with:
-
-```sh
-npm run demo
-```
-
-The first ranking with a model downloads its weights through Transformers.js. The demo uses
-quantized weights and caches each loaded reranker for subsequent runs. Your query and documents
-remain in the browser.
 
 ## Why rerankers?
 
 In RAG and other retrieval workflows, returning accurate results is a trade off between search capabilities and speed. Embedding models and vector indexes are good at returning semantically similar results fast. Cross-encoding rerankers are much more accurate, but slower, because they compare the query with each document at ranking time.
 
 This library uses [`@huggingface/transformers`](https://huggingface.co/docs/transformers.js/en/index) to make it easy to rerank documents against queries using local models.
+
+### Demo
+
+You can see this library in action in a [live reranking demo](https://philnash.github.io/rerankers/).
 
 ## How it works
 
@@ -131,6 +124,26 @@ const reranker = await Reranker.create({
 ```
 
 For more on [dtypes](https://huggingface.co/docs/transformers.js/en/guides/dtypes) or [device options](https://huggingface.co/docs/transformers.js/en/guides/webgpu) check the [Transformers.js documentation](https://huggingface.co/docs/transformers.js/en/index).
+
+### Models
+
+These models have been tested and work with rerankers. Other reranking models with ONNX weights should also work.
+
+| Model | Parameters | Languages | Context |
+|---|---:|---|---:|
+| [`Xenova/ms-marco-TinyBERT-L-2-v2`](https://huggingface.co/Xenova/ms-marco-TinyBERT-L-2-v2) | 4.4M | English | 512 |
+| [`Xenova/ms-marco-MiniLM-L-2-v2`](https://huggingface.co/Xenova/ms-marco-MiniLM-L-2-v2) | 15.6M | English | 512 |
+| [`Xenova/ms-marco-MiniLM-L-4-v2`](https://huggingface.co/Xenova/ms-marco-MiniLM-L-4-v2) | 19.2M | English | 512 |
+| [`Xenova/ms-marco-MiniLM-L-6-v2`](https://huggingface.co/Xenova/ms-marco-MiniLM-L-6-v2) | 22.7M | English | 512 |
+| [`Xenova/ms-marco-MiniLM-L-12-v2`](https://huggingface.co/Xenova/ms-marco-MiniLM-L-12-v2) | 33.4M | English | 512 |
+| [`jinaai/jina-reranker-v1-tiny-en`](https://huggingface.co/jinaai/jina-reranker-v1-tiny-en) | 33.0M | English | 8,192 |
+| [`jinaai/jina-reranker-v1-turbo-en`](https://huggingface.co/jinaai/jina-reranker-v1-turbo-en) | 37.8M | English | 8,192 |
+| [`mixedbread-ai/mxbai-rerank-xsmall-v1`](https://huggingface.co/mixedbread-ai/mxbai-rerank-xsmall-v1) | 70.8M | English | 512 |
+| [`mixedbread-ai/mxbai-rerank-base-v1`](https://huggingface.co/mixedbread-ai/mxbai-rerank-base-v1) | 184M | English | 512 |
+| [`Xenova/bge-reranker-base`](https://huggingface.co/Xenova/bge-reranker-base) | ~278M | Chinese and English | 512 |
+| [`mixedbread-ai/mxbai-rerank-large-v1`](https://huggingface.co/mixedbread-ai/mxbai-rerank-large-v1) | 435M | English | 512 |
+| [`Xenova/bge-reranker-large`](https://huggingface.co/Xenova/bge-reranker-large) | ~560M | Chinese and English | 512 |
+| [`onnx-community/bge-reranker-v2-m3-ONNX`](https://huggingface.co/onnx-community/bge-reranker-v2-m3-ONNX) | 568M | Multilingual | 8,192 |
 
 ### Documents
 
