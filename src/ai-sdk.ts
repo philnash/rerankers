@@ -5,7 +5,6 @@ import type { RerankerConfig, RerankerCreateOptions } from "./types.js";
 
 export type AISDKRerankingModel = Extract<RerankingModel, { readonly specificationVersion: "v4" }>;
 export type AISDKRerankingModelCallOptions = Parameters<AISDKRerankingModel["doRerank"]>[0];
-export type AISDKRerankingModelResult = Awaited<ReturnType<AISDKRerankingModel["doRerank"]>>;
 export type AISDKJSONObject = Extract<
   AISDKRerankingModelCallOptions["documents"],
   { type: "object" }

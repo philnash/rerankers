@@ -85,10 +85,6 @@ export class LocalReranker extends BaseDocumentCompressor {
     documents: DocumentInterface[],
     query: string,
   ): Promise<DocumentInterface[]> {
-    if (documents.length === 0) {
-      return [];
-    }
-
     const results = await this.rerank(documents, query);
 
     return results.map(({ index, relevanceScore }) => {
