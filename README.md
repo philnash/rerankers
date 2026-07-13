@@ -2,20 +2,19 @@
 
 Run local reranking models directly in your JavaScript/TypeScript application.
 
-* [Why rerankers?](#why-rerankers)
-  * [Demo](#demo)
-* [How it works](#how-it-works)
-  * [Install](#install)
-  * [Using the library](#using-the-library)
-  * [Model config](#model-config)
-  * [Models](#models)
-  * [Documents](#documents)
-* [Ecosystem plugins](#ecosystem-plugins)
-  * [LangChain](#langchain)
-  * [Vercel AI SDK](#vercel-ai-sdk)
-* [Browser And Node](#browser-and-node)
-* [License](#license)
-
+- [Why rerankers?](#why-rerankers)
+  - [Demo](#demo)
+- [How it works](#how-it-works)
+  - [Install](#install)
+  - [Using the library](#using-the-library)
+  - [Model config](#model-config)
+  - [Models](#models)
+  - [Documents](#documents)
+- [Ecosystem plugins](#ecosystem-plugins)
+  - [LangChain](#langchain)
+  - [Vercel AI SDK](#vercel-ai-sdk)
+- [Browser And Node](#browser-and-node)
+- [License](#license)
 
 ## Why rerankers?
 
@@ -129,21 +128,21 @@ For more on [dtypes](https://huggingface.co/docs/transformers.js/en/guides/dtype
 
 These models have been tested and work with rerankers. Other reranking models with ONNX weights should also work.
 
-| Model | Parameters | Languages | Context |
-|---|---:|---|---:|
-| [`Xenova/ms-marco-TinyBERT-L-2-v2`](https://huggingface.co/Xenova/ms-marco-TinyBERT-L-2-v2) | 4.4M | English | 512 |
-| [`Xenova/ms-marco-MiniLM-L-2-v2`](https://huggingface.co/Xenova/ms-marco-MiniLM-L-2-v2) | 15.6M | English | 512 |
-| [`Xenova/ms-marco-MiniLM-L-4-v2`](https://huggingface.co/Xenova/ms-marco-MiniLM-L-4-v2) | 19.2M | English | 512 |
-| [`Xenova/ms-marco-MiniLM-L-6-v2`](https://huggingface.co/Xenova/ms-marco-MiniLM-L-6-v2) | 22.7M | English | 512 |
-| [`Xenova/ms-marco-MiniLM-L-12-v2`](https://huggingface.co/Xenova/ms-marco-MiniLM-L-12-v2) | 33.4M | English | 512 |
-| [`jinaai/jina-reranker-v1-tiny-en`](https://huggingface.co/jinaai/jina-reranker-v1-tiny-en) | 33.0M | English | 8,192 |
-| [`jinaai/jina-reranker-v1-turbo-en`](https://huggingface.co/jinaai/jina-reranker-v1-turbo-en) | 37.8M | English | 8,192 |
-| [`mixedbread-ai/mxbai-rerank-xsmall-v1`](https://huggingface.co/mixedbread-ai/mxbai-rerank-xsmall-v1) | 70.8M | English | 512 |
-| [`mixedbread-ai/mxbai-rerank-base-v1`](https://huggingface.co/mixedbread-ai/mxbai-rerank-base-v1) | 184M | English | 512 |
-| [`Xenova/bge-reranker-base`](https://huggingface.co/Xenova/bge-reranker-base) | ~278M | Chinese and English | 512 |
-| [`mixedbread-ai/mxbai-rerank-large-v1`](https://huggingface.co/mixedbread-ai/mxbai-rerank-large-v1) | 435M | English | 512 |
-| [`Xenova/bge-reranker-large`](https://huggingface.co/Xenova/bge-reranker-large) | ~560M | Chinese and English | 512 |
-| [`onnx-community/bge-reranker-v2-m3-ONNX`](https://huggingface.co/onnx-community/bge-reranker-v2-m3-ONNX) | 568M | Multilingual | 8,192 |
+| Model                                                                                                     | Parameters | Languages           | Context |
+| --------------------------------------------------------------------------------------------------------- | ---------: | ------------------- | ------: |
+| [`Xenova/ms-marco-TinyBERT-L-2-v2`](https://huggingface.co/Xenova/ms-marco-TinyBERT-L-2-v2)               |       4.4M | English             |     512 |
+| [`Xenova/ms-marco-MiniLM-L-2-v2`](https://huggingface.co/Xenova/ms-marco-MiniLM-L-2-v2)                   |      15.6M | English             |     512 |
+| [`Xenova/ms-marco-MiniLM-L-4-v2`](https://huggingface.co/Xenova/ms-marco-MiniLM-L-4-v2)                   |      19.2M | English             |     512 |
+| [`Xenova/ms-marco-MiniLM-L-6-v2`](https://huggingface.co/Xenova/ms-marco-MiniLM-L-6-v2)                   |      22.7M | English             |     512 |
+| [`Xenova/ms-marco-MiniLM-L-12-v2`](https://huggingface.co/Xenova/ms-marco-MiniLM-L-12-v2)                 |      33.4M | English             |     512 |
+| [`jinaai/jina-reranker-v1-tiny-en`](https://huggingface.co/jinaai/jina-reranker-v1-tiny-en)               |      33.0M | English             |   8,192 |
+| [`jinaai/jina-reranker-v1-turbo-en`](https://huggingface.co/jinaai/jina-reranker-v1-turbo-en)             |      37.8M | English             |   8,192 |
+| [`mixedbread-ai/mxbai-rerank-xsmall-v1`](https://huggingface.co/mixedbread-ai/mxbai-rerank-xsmall-v1)     |      70.8M | English             |     512 |
+| [`mixedbread-ai/mxbai-rerank-base-v1`](https://huggingface.co/mixedbread-ai/mxbai-rerank-base-v1)         |       184M | English             |     512 |
+| [`Xenova/bge-reranker-base`](https://huggingface.co/Xenova/bge-reranker-base)                             |      ~278M | Chinese and English |     512 |
+| [`mixedbread-ai/mxbai-rerank-large-v1`](https://huggingface.co/mixedbread-ai/mxbai-rerank-large-v1)       |       435M | English             |     512 |
+| [`Xenova/bge-reranker-large`](https://huggingface.co/Xenova/bge-reranker-large)                           |      ~560M | Chinese and English |     512 |
+| [`onnx-community/bge-reranker-v2-m3-ONNX`](https://huggingface.co/onnx-community/bge-reranker-v2-m3-ONNX) |       568M | Multilingual        |   8,192 |
 
 ### Documents
 
