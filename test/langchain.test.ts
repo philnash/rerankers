@@ -1,42 +1,31 @@
 import { Document, type DocumentInterface } from "@langchain/core/documents";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import {
-  LocalReranker,
-  type LocalRerankerCore,
-  type LocalRerankerInput,
-} from "../src/langchain.js";
-import type { RankOptions, RerankDocument, RerankResult } from "../src/index.js";
+import { LocalReranker, type LocalRerankerInput } from "../src/langchain.js";
+import { Reranker, RerankerDisposedError } from "../src/index.js";
 
-type RankCall = {
-  query: string;
-  documents: readonly RerankDocument[];
-  options: RankOptions | undefined;
-};
-
-function fakeReranker(scores: number[]) {
-  const calls: RankCall[] = [];
-  const reranker: LocalRerankerCore = {
-    rank<TDocument extends RerankDocument>(
-      query: string,
-      documents: readonly TDocument[],
-      options?: RankOptions,
-    ): Promise<Array<RerankResult<TDocument>>> {
-      calls.push({ query, documents, options });
-
-      const ranked = documents.map((document, index) => ({
-        document,
-        index,
-        score: scores[index] ?? 0,
-      }));
-
-      return Promise.resolve(
-        ranked.sort((left, right) => right.score - left.score).slice(0, options?.topK),
-      );
+async function fakeReranker(scores: number[]) {
+  const dispose = vi.fn(() => Promise.resolve());
+  const reranker = await Reranker.create(
+    { model: "test/reranker" },
+    {
+      strategyFactory: () =>
+        Promise.resolve({
+          dispose,
+          score: (_query, documents) =>
+            Promise.resolve(
+              documents.map(({ document, index }) => ({
+                document,
+                index,
+                score: scores[index] ?? 0,
+              })),
+            ),
+        }),
     },
-  };
+  );
+  const rank = vi.spyOn(reranker, "rank");
 
-  return { calls, reranker };
+  return { dispose, rank, reranker };
 }
 
 describe("LocalReranker", () => {
@@ -74,7 +63,7 @@ describe("LocalReranker", () => {
   });
 
   it("compresses LangChain documents in relevance order and writes relevanceScore metadata", async () => {
-    const { calls, reranker } = fakeReranker([0.2, 0.9, 0.4]);
+    const { rank, reranker } = await fakeReranker([0.2, 0.9, 0.4]);
     const local = new LocalReranker({ reranker, topK: 2 });
     const documents = [
       new Document({ pageContent: "Venus is hot.", metadata: { source: "a" } }),
@@ -89,11 +78,8 @@ describe("LocalReranker", () => {
     expect(compressed[1]).toBe(documents[2]);
     expect(documents[1]?.metadata).toMatchObject({ source: "b", relevanceScore: 0.9 });
     expect(documents[2]?.metadata).toMatchObject({ source: "c", relevanceScore: 0.4 });
-    expect(calls[0]).toMatchObject({
-      query: "red planet",
-      options: { topK: 2 },
-    });
-    expect(calls[0]?.documents).toEqual([
+    expect(rank).toHaveBeenCalledWith("red planet", expect.any(Array), { topK: 2 });
+    expect(rank.mock.calls[0]?.[1]).toEqual([
       { text: "Venus is hot.", metadata: documents[0] },
       { text: "Mars is red.", metadata: documents[1] },
       { text: "Jupiter is large.", metadata: documents[2] },
@@ -101,7 +87,7 @@ describe("LocalReranker", () => {
   });
 
   it("returns raw rerank results and lets method topK override constructor topK", async () => {
-    const { calls, reranker } = fakeReranker([0.2, 0.9, 0.4]);
+    const { rank, reranker } = await fakeReranker([0.2, 0.9, 0.4]);
     const local = new LocalReranker({ reranker, topK: 1 });
     const documents = [
       new Document({ pageContent: "Venus" }),
@@ -116,11 +102,11 @@ describe("LocalReranker", () => {
       { index: 2, relevanceScore: 0.4 },
       { index: 0, relevanceScore: 0.2 },
     ]);
-    expect(calls[0]?.options).toEqual({ topK: 3 });
+    expect(rank.mock.calls[0]?.[2]).toEqual({ topK: 3 });
   });
 
   it("supports string and pageContent object inputs in rerank", async () => {
-    const { calls, reranker } = fakeReranker([0.1, 0.7]);
+    const { rank, reranker } = await fakeReranker([0.1, 0.7]);
     const local = new LocalReranker({ reranker });
     const documents: LocalRerankerInput[] = ["plain text", { pageContent: "object text" }];
 
@@ -128,23 +114,23 @@ describe("LocalReranker", () => {
       { index: 1, relevanceScore: 0.7 },
       { index: 0, relevanceScore: 0.1 },
     ]);
-    expect(calls[0]?.documents).toEqual([
+    expect(rank.mock.calls[0]?.[1]).toEqual([
       { text: "plain text", metadata: "plain text" },
       { text: "object text", metadata: documents[1] },
     ]);
   });
 
   it("returns an empty list without calling the core reranker", async () => {
-    const { calls, reranker } = fakeReranker([]);
+    const { rank, reranker } = await fakeReranker([]);
     const local = new LocalReranker({ reranker, topK: 2 });
 
     await expect(local.compressDocuments([], "query")).resolves.toEqual([]);
     await expect(local.rerank([], "query", { topK: 1 })).resolves.toEqual([]);
-    expect(calls).toEqual([]);
+    expect(rank).not.toHaveBeenCalled();
   });
 
-  it("rejects JavaScript callers that provide both model and reranker", () => {
-    const { reranker } = fakeReranker([]);
+  it("rejects JavaScript callers that provide both model and reranker", async () => {
+    const { reranker } = await fakeReranker([]);
 
     expect(
       () =>
@@ -156,7 +142,7 @@ describe("LocalReranker", () => {
   });
 
   it("accepts DocumentInterface inputs without requiring concrete Document instances", async () => {
-    const { reranker } = fakeReranker([1]);
+    const { reranker } = await fakeReranker([1]);
     const local = new LocalReranker({ reranker });
     const document: DocumentInterface = {
       pageContent: "interface document",
@@ -167,5 +153,33 @@ describe("LocalReranker", () => {
 
     expect(compressed).toEqual([document]);
     expect(document.metadata.relevanceScore).toBe(1);
+  });
+
+  it("disposes a core reranker that it creates and rejects subsequent reranks", async () => {
+    const dispose = vi.fn(() => Promise.resolve());
+    const local = new LocalReranker({
+      model: "mixedbread-ai/mxbai-rerank-base-v1",
+      strategyFactory: () =>
+        Promise.resolve({
+          score: () => Promise.resolve([]),
+          dispose,
+        }),
+    });
+
+    await local.dispose();
+    await local.dispose();
+    await local[Symbol.asyncDispose]();
+
+    expect(dispose).toHaveBeenCalledOnce();
+    await expect(local.rerank(["document"], "query")).rejects.toBeInstanceOf(RerankerDisposedError);
+  });
+
+  it("disposes an injected core reranker", async () => {
+    const { dispose, reranker } = await fakeReranker([1]);
+    const local = new LocalReranker({ reranker });
+
+    await local.dispose();
+
+    expect(dispose).toHaveBeenCalledOnce();
   });
 });

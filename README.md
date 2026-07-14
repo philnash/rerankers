@@ -224,7 +224,11 @@ const reranker = new LocalReranker({
   topK: 5,
 });
 
-const documents = await reranker.compressDocuments(lcDocs, query);
+try {
+  const documents = await reranker.compressDocuments(lcDocs, query);
+} finally {
+  await reranker.dispose();
+}
 ```
 
 Returned LangChain documents are the original document objects in reranked order. Each returned document receives `metadata.relevanceScore`.
@@ -250,6 +254,8 @@ import { Reranker } from "rerankers";
 const coreReranker = await Reranker.create({ model: "mixedbread-ai/mxbai-rerank-base-v1" });
 const reranker = new LocalReranker({ reranker: coreReranker, topK: 5 });
 ```
+
+`LocalReranker.dispose()` delegates to its core reranker, including when the core reranker was injected. `LocalReranker` also supports `await using` through `Symbol.asyncDispose`.
 
 Use `rerank()` when you want raw scores without mutating LangChain document metadata:
 

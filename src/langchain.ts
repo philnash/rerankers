@@ -3,22 +3,11 @@ import { BaseDocumentCompressor } from "@langchain/core/retrievers/document_comp
 
 import { Reranker } from "./reranker.js";
 import type {
-  RankOptions,
   RerankerConfig,
   RerankerStrategyName,
-  RerankDocument,
-  RerankResult,
   StrategyFactory,
   TransformerOptions,
 } from "./types.js";
-
-export type LocalRerankerCore = {
-  rank<TDocument extends RerankDocument>(
-    query: string,
-    documents: readonly TDocument[],
-    options?: RankOptions,
-  ): Promise<Array<RerankResult<TDocument>>>;
-};
 
 export type LocalRerankerInput = DocumentInterface | string | { pageContent: string };
 
@@ -41,7 +30,7 @@ export type LocalRerankerArgs =
       topK?: number;
     }
   | {
-      reranker: LocalRerankerCore;
+      reranker: Reranker;
       model?: never;
       strategy?: never;
       transformerOptions?: never;
@@ -49,8 +38,8 @@ export type LocalRerankerArgs =
       topK?: number;
     };
 
-export class LocalReranker extends BaseDocumentCompressor {
-  private readonly reranker: Promise<LocalRerankerCore>;
+export class LocalReranker extends BaseDocumentCompressor implements AsyncDisposable {
+  private readonly reranker: Promise<Reranker>;
   private readonly topK: number | undefined;
 
   constructor(fields: LocalRerankerArgs) {
@@ -116,6 +105,15 @@ export class LocalReranker extends BaseDocumentCompressor {
     const results = await reranker.rank(query, rerankDocuments, rankOptions);
 
     return results.map(({ index, score }) => ({ index, relevanceScore: score }));
+  }
+
+  async dispose(): Promise<void> {
+    const reranker = await this.reranker;
+    await reranker.dispose();
+  }
+
+  [Symbol.asyncDispose](): Promise<void> {
+    return this.dispose();
   }
 }
 
