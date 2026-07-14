@@ -2,8 +2,16 @@
   "name": "rerankers",
   "version": "0.1.0",
   "description": "Browser-compatible reranking library powered by Transformers.js and open Hugging Face models.",
+  "author": "Phil Nash <philnash@gmail.com> (https://philna.sh/)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/philnash/rerankers.git"
+  },
+  "homepage": "https://github.com/philnash/rerankers#readme",
+  "bugs": {
+    "url": "https://github.com/philnash/rerankers/issues"
+  },
   "type": "module",
-  "private": true,
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -21,12 +29,17 @@
       "import": "./dist/ai-sdk.js"
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsup",
+    "prepack": "npm run build",
     "demo": "vite --config demo/vite.config.ts",
     "demo:build": "vite build --config demo/vite.config.ts",
     "format": "prettier --write .",
@@ -35,7 +48,7 @@
     "models:clean": "node scripts/clean-model-cache.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run typecheck && npm run format"
+    "check": "npm run lint && npm run typecheck && npm run format && npm run test && npm run build"
   },
   "keywords": [
     "reranking",
