@@ -1,9 +1,15 @@
 import type { RerankingModel } from "ai";
 
+import { RerankerDisposedError } from "./errors.js";
 import { Reranker } from "./reranker.js";
 import type { RerankerConfig, RerankerCreateOptions } from "./types.js";
 
-export type AISDKRerankingModel = Extract<RerankingModel, { readonly specificationVersion: "v4" }>;
+type AISDKRerankingModelV4 = Extract<RerankingModel, { readonly specificationVersion: "v4" }>;
+
+export type AISDKRerankingModel = AISDKRerankingModelV4 &
+  AsyncDisposable & {
+    dispose(): Promise<void>;
+  };
 export type AISDKRerankingModelCallOptions = Parameters<AISDKRerankingModel["doRerank"]>[0];
 export type AISDKJSONObject = Extract<
   AISDKRerankingModelCallOptions["documents"],
@@ -22,12 +28,37 @@ export function createAISDKRerankingModel(
   const { documentText = defaultDocumentText, provider = "rerankers", ...createOptions } = options;
   const modelId = config.model;
   let rerankerPromise: Promise<Reranker> | undefined;
+  let disposed = false;
+
+  const dispose = async (): Promise<void> => {
+    disposed = true;
+
+    const currentRerankerPromise = rerankerPromise;
+    if (currentRerankerPromise === undefined) {
+      return;
+    }
+
+    try {
+      const reranker = await currentRerankerPromise;
+      await reranker.dispose();
+    } finally {
+      if (rerankerPromise === currentRerankerPromise) {
+        rerankerPromise = undefined;
+      }
+    }
+  };
 
   return {
     specificationVersion: "v4",
     provider,
     modelId,
+    dispose,
+    [Symbol.asyncDispose]: dispose,
     async doRerank({ documents, query, topN, abortSignal }) {
+      if (disposed) {
+        throw new RerankerDisposedError();
+      }
+
       throwIfAborted(abortSignal);
 
       rerankerPromise ??= Reranker.create(config, createOptions);

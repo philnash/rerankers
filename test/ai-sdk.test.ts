@@ -1,21 +1,24 @@
 import { rerank, type RerankingModel } from "ai";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createAISDKRerankingModel, rerankers, type AISDKRerankingModel } from "../src/ai-sdk.js";
-import type {
-  NormalizedDocument,
-  RerankDocument,
-  RerankResult,
-  ScoringStrategy,
+import {
+  RerankerDisposedError,
+  type NormalizedDocument,
+  type RerankDocument,
+  type RerankResult,
+  type ScoringStrategy,
 } from "../src/index.js";
 
 type FakeStrategy = ScoringStrategy & {
   callCount: () => number;
+  disposeCount: () => number;
   seenDocuments: () => Array<NormalizedDocument<RerankDocument>>;
 };
 
 function strategyFromScores(scores: number[]): FakeStrategy {
   let calls = 0;
+  let disposals = 0;
   let seenDocuments: Array<NormalizedDocument<RerankDocument>> = [];
 
   const score: ScoringStrategy["score"] = <TDocument extends RerankDocument>(
@@ -36,6 +39,11 @@ function strategyFromScores(scores: number[]): FakeStrategy {
   return {
     score,
     callCount: () => calls,
+    dispose: () => {
+      disposals += 1;
+      return Promise.resolve();
+    },
+    disposeCount: () => disposals,
     seenDocuments: () => seenDocuments,
   };
 }
@@ -193,6 +201,74 @@ describe("AI SDK adapter", () => {
         },
       },
     ]);
+  });
+
+  it("disposes a loaded reranker once through dispose and Symbol.asyncDispose", async () => {
+    const strategy = strategyFromScores([1]);
+    const model = createAISDKRerankingModel(
+      { model: "Xenova/ms-marco-MiniLM-L-6-v2" },
+      { strategyFactory: () => Promise.resolve(strategy) },
+    );
+    await model.doRerank({
+      query: "query",
+      documents: { type: "text", values: ["document"] },
+    });
+
+    await model.dispose();
+    await model.dispose();
+    await model[Symbol.asyncDispose]();
+
+    expect(strategy.disposeCount()).toBe(1);
+  });
+
+  it("does not create a reranker when disposed before first use", async () => {
+    const strategyFactory = vi.fn(() => Promise.resolve(strategyFromScores([1])));
+    const model = createAISDKRerankingModel(
+      { model: "Xenova/ms-marco-MiniLM-L-6-v2" },
+      { strategyFactory },
+    );
+
+    await model.dispose();
+
+    expect(strategyFactory).not.toHaveBeenCalled();
+    await expect(
+      model.doRerank({
+        query: "query",
+        documents: { type: "text", values: ["document"] },
+      }),
+    ).rejects.toBeInstanceOf(RerankerDisposedError);
+  });
+
+  it("waits for an active rerank before disposing", async () => {
+    const scoringStarted = deferred<void>();
+    const finishScoring = deferred<void>();
+    const dispose = vi.fn(() => Promise.resolve());
+    const score: ScoringStrategy["score"] = async <TDocument extends RerankDocument>(
+      _query: string,
+      documents: Array<NormalizedDocument<TDocument>>,
+    ): Promise<Array<RerankResult<TDocument>>> => {
+      scoringStarted.resolve();
+      await finishScoring.promise;
+      return documents.map(({ document, index }) => ({ document, index, score: 1 }));
+    };
+    const model = createAISDKRerankingModel(
+      { model: "Xenova/ms-marco-MiniLM-L-6-v2" },
+      { strategyFactory: () => Promise.resolve({ score, dispose }) },
+    );
+    const rerankPromise = model.doRerank({
+      query: "query",
+      documents: { type: "text", values: ["document"] },
+    });
+    await scoringStarted.promise;
+
+    const disposePromise = model.dispose();
+    await Promise.resolve();
+
+    expect(dispose).not.toHaveBeenCalled();
+    finishScoring.resolve();
+    await rerankPromise;
+    await disposePromise;
+    expect(dispose).toHaveBeenCalledOnce();
   });
 });
 

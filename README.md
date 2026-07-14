@@ -276,8 +276,12 @@ npm install rerankers ai
 import { rerank } from "ai";
 import { rerankers } from "rerankers/ai-sdk";
 
+await using model = rerankers.rerankingModel({
+  model: "mixedbread-ai/mxbai-rerank-base-v1",
+});
+
 const { ranking, rerankedDocuments } = await rerank({
-  model: rerankers.rerankingModel({ model: "mixedbread-ai/mxbai-rerank-base-v1" }),
+  model,
   query: "Which document mentions Mars?",
   documents: [
     "Venus has a thick atmosphere.",
@@ -287,6 +291,8 @@ const { ranking, rerankedDocuments } = await rerank({
   topN: 2,
 });
 ```
+
+The returned model owns its local reranker and supports both `dispose()` and `Symbol.asyncDispose` for releasing it.
 
 AI SDK object documents are supported with a text extractor. If you do not provide one, the adapter uses a string `text` property when present and falls back to `JSON.stringify(document)`.
 
