@@ -54,7 +54,7 @@ export class CrossEncoderStrategy implements ScoringStrategy {
     return documents.map(({ document, index }, resultIndex) => ({
       document,
       index,
-      score: scores[resultIndex] ?? 0,
+      score: scores[resultIndex]!,
     }));
   }
 
@@ -91,10 +91,6 @@ export class CrossEncoderStrategy implements ScoringStrategy {
     const classifier = await classifierPromise;
     await classifier.dispose();
   }
-}
-
-export function createCrossEncoderStrategy(config: NormalizedRerankerConfig): ScoringStrategy {
-  return new CrossEncoderStrategy(config);
 }
 
 const defaultSequenceClassifierLoader: SequenceClassifierLoader = async (modelId, options) => {

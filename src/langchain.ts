@@ -2,12 +2,7 @@ import type { DocumentInterface } from "@langchain/core/documents";
 import { BaseDocumentCompressor } from "@langchain/core/retrievers/document_compressors";
 
 import { Reranker } from "./reranker.js";
-import type {
-  RerankerConfig,
-  RerankerStrategyName,
-  StrategyFactory,
-  TransformerOptions,
-} from "./types.js";
+import type { RankOptions, RerankerConfig, StrategyFactory } from "./types.js";
 
 export type LocalRerankerInput = DocumentInterface | string | { pageContent: string };
 
@@ -16,19 +11,14 @@ export type LocalRerankerResult = {
   relevanceScore: number;
 };
 
-export type LocalRerankerRerankOptions = {
-  topK?: number;
-};
+export type LocalRerankerRerankOptions = RankOptions;
 
 export type LocalRerankerArgs =
-  | {
-      model: string;
-      strategy?: RerankerStrategyName;
-      transformerOptions?: TransformerOptions;
+  | (RerankerConfig & {
       strategyFactory?: StrategyFactory;
       reranker?: never;
       topK?: number;
-    }
+    })
   | {
       reranker: Reranker;
       model?: never;
@@ -67,7 +57,7 @@ export class LocalReranker extends BaseDocumentCompressor implements AsyncDispos
       fields.strategyFactory === undefined
         ? undefined
         : { strategyFactory: fields.strategyFactory };
-    this.reranker = Reranker.create(toRerankerConfig(fields), createOptions);
+    this.reranker = Reranker.create(fields, createOptions);
   }
 
   async compressDocuments(
@@ -115,20 +105,6 @@ export class LocalReranker extends BaseDocumentCompressor implements AsyncDispos
   [Symbol.asyncDispose](): Promise<void> {
     return this.dispose();
   }
-}
-
-function toRerankerConfig(fields: Extract<LocalRerankerArgs, { model: string }>): RerankerConfig {
-  const config: RerankerConfig = { model: fields.model };
-
-  if (fields.strategy !== undefined) {
-    config.strategy = fields.strategy;
-  }
-
-  if (fields.transformerOptions !== undefined) {
-    config.transformerOptions = fields.transformerOptions;
-  }
-
-  return config;
 }
 
 function getPageContent(document: LocalRerankerInput): string {

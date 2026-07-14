@@ -1,7 +1,6 @@
 import type { PretrainedModelOptions } from "@huggingface/transformers";
 
-export type BuiltInRerankerStrategyName = "cross-encoder";
-export type RerankerStrategyName = BuiltInRerankerStrategyName | (string & {});
+export type RerankerStrategyName = "cross-encoder" | (string & {});
 
 export type RerankDocument<TMetadata = unknown> =
   | string
@@ -48,7 +47,9 @@ export type ScoringStrategy = {
   dispose?(): Promise<void>;
 };
 
-export type StrategyFactory = (config: NormalizedRerankerConfig) => Promise<ScoringStrategy>;
+export type StrategyFactory = (
+  config: NormalizedRerankerConfig,
+) => ScoringStrategy | Promise<ScoringStrategy>;
 
 export type RerankerCreateOptions = {
   strategyFactory?: StrategyFactory;

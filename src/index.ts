@@ -13,7 +13,6 @@ export type {
   RerankDocument,
   RerankerConfig,
   RerankerCreateOptions,
-  BuiltInRerankerStrategyName,
   RerankerStrategyName,
   RerankResult,
   ScoringStrategy,

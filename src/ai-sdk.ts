@@ -4,9 +4,7 @@ import { RerankerDisposedError } from "./errors.js";
 import { Reranker } from "./reranker.js";
 import type { RerankerConfig, RerankerCreateOptions } from "./types.js";
 
-type AISDKRerankingModelV4 = Extract<RerankingModel, { readonly specificationVersion: "v4" }>;
-
-export type AISDKRerankingModel = AISDKRerankingModelV4 &
+export type AISDKRerankingModel = Extract<RerankingModel, { readonly specificationVersion: "v4" }> &
   AsyncDisposable & {
     dispose(): Promise<void>;
   };
@@ -59,7 +57,7 @@ export function createAISDKRerankingModel(
         throw new RerankerDisposedError();
       }
 
-      throwIfAborted(abortSignal);
+      abortSignal?.throwIfAborted();
 
       rerankerPromise ??= Reranker.create(config, createOptions);
 
@@ -70,20 +68,21 @@ export function createAISDKRerankingModel(
         rerankerPromise = undefined;
         throw error;
       }
-      throwIfAborted(abortSignal);
+      abortSignal?.throwIfAborted();
 
+      const rankOptions = topN === undefined ? undefined : { topK: topN };
       const results =
         documents.type === "text"
-          ? await reranker.rank(query, documents.values, toRankOptions(topN))
+          ? await reranker.rank(query, documents.values, rankOptions)
           : await reranker.rank(
               query,
               documents.values.map((document) => ({
                 text: documentText(document),
                 metadata: document,
               })),
-              toRankOptions(topN),
+              rankOptions,
             );
-      throwIfAborted(abortSignal);
+      abortSignal?.throwIfAborted();
 
       return {
         ranking: results.map(({ index, score }) => ({
@@ -102,22 +101,10 @@ export const rerankers = {
   rerankingModel: createAISDKRerankingModel,
 } as const;
 
-function toRankOptions(topN: number | undefined): { topK: number } | undefined {
-  return topN === undefined ? undefined : { topK: topN };
-}
-
 function defaultDocumentText(document: AISDKJSONObject): string {
   if (typeof document.text === "string") {
     return document.text;
   }
 
   return JSON.stringify(document);
-}
-
-function throwIfAborted(abortSignal: AbortSignal | undefined): void {
-  if (!abortSignal?.aborted) {
-    return;
-  }
-
-  abortSignal.throwIfAborted();
 }

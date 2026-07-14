@@ -1,7 +1,7 @@
-import { normalizeDocuments, normalizeTopK } from "./document.js";
-import { RerankerDisposedError, UnsupportedStrategyError } from "./errors.js";
-import { createCrossEncoderStrategy } from "./strategies/cross-encoder.js";
+import { RerankerDisposedError, RerankerInputError, UnsupportedStrategyError } from "./errors.js";
+import { CrossEncoderStrategy } from "./strategies/cross-encoder.js";
 import type {
+  NormalizedDocument,
   NormalizedRerankerConfig,
   RankOptions,
   RerankerConfig,
@@ -14,7 +14,6 @@ import type {
 export class Reranker implements AsyncDisposable {
   private readonly activeRanks = new Set<Promise<unknown>>();
   private disposePromise: Promise<void> | undefined;
-  private disposed = false;
 
   private constructor(private readonly strategy: ScoringStrategy) {}
 
@@ -22,9 +21,15 @@ export class Reranker implements AsyncDisposable {
     config: RerankerConfig,
     options: RerankerCreateOptions = {},
   ): Promise<Reranker> {
-    const strategy = await (options.strategyFactory ?? createDefaultStrategy)(
-      normalizeConfig(config),
-    );
+    const normalizedConfig: NormalizedRerankerConfig = {
+      model: config.model,
+      strategy: config.strategy ?? "cross-encoder",
+      transformerOptions: {
+        dtype: "auto",
+        ...config.transformerOptions,
+      },
+    };
+    const strategy = await (options.strategyFactory ?? createDefaultStrategy)(normalizedConfig);
 
     return new Reranker(strategy);
   }
@@ -34,7 +39,7 @@ export class Reranker implements AsyncDisposable {
     documents: readonly TDocument[],
     options?: RankOptions,
   ): Promise<Array<RerankResult<TDocument>>> {
-    if (this.disposed) {
+    if (this.disposePromise !== undefined) {
       throw new RerankerDisposedError();
     }
 
@@ -67,33 +72,51 @@ export class Reranker implements AsyncDisposable {
       return [];
     }
 
-    const topK = normalizeTopK(options, normalized.length);
+    const topK = normalizeTopK(options?.topK, normalized.length);
     const results = await this.strategy.score(query, normalized);
     return [...results].sort((left, right) => right.score - left.score).slice(0, topK);
   }
 
   private async disposeStrategy(): Promise<void> {
-    this.disposed = true;
     await Promise.allSettled([...this.activeRanks]);
     await this.strategy.dispose?.();
   }
 }
 
-function normalizeConfig(config: RerankerConfig): NormalizedRerankerConfig {
-  return {
-    ...config,
-    strategy: config.strategy ?? "cross-encoder",
-    transformerOptions: {
-      dtype: "auto",
-      ...config.transformerOptions,
-    },
-  };
+function normalizeDocuments<TDocument extends RerankDocument>(
+  documents: readonly TDocument[],
+): Array<NormalizedDocument<TDocument>> {
+  return documents.map((document, index) => {
+    if (typeof document === "string") {
+      return { document, index, text: document };
+    }
+
+    if (!document || typeof document.text !== "string") {
+      throw new RerankerInputError(
+        "Each document must be a string or an object with a text field.",
+      );
+    }
+
+    return { document, index, text: document.text };
+  });
 }
 
-function createDefaultStrategy(config: NormalizedRerankerConfig): Promise<ScoringStrategy> {
-  if (config.strategy === "cross-encoder") {
-    return Promise.resolve(createCrossEncoderStrategy(config));
+function normalizeTopK(topK: number | undefined, documentCount: number): number {
+  if (topK === undefined) {
+    return documentCount;
   }
 
-  throw new UnsupportedStrategyError(config.strategy);
+  if (!Number.isInteger(topK) || topK < 1) {
+    throw new RerankerInputError("rank option topK must be a positive integer.");
+  }
+
+  return Math.min(topK, documentCount);
+}
+
+function createDefaultStrategy(config: NormalizedRerankerConfig): ScoringStrategy {
+  if (config.strategy !== "cross-encoder") {
+    throw new UnsupportedStrategyError(config.strategy);
+  }
+
+  return new CrossEncoderStrategy(config);
 }
